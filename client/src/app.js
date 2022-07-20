@@ -64,20 +64,19 @@ class Player {
     const crouching = data["crouching"];
     const collidingLeft = data['collidingLeft'];
     const collidingRight = data['collidingRight'];
-    console.log(this.num, keys['d'], last_key, this.left)
 
     if (keys["d"] && last_key == "d") {
       // walk right
-      if (collidingRight) {
+      if (collidingRight || this.player.x + 130 >= window.innerWidth) {
         this.velocity[0] = 0;
-      } else if (this.player.x + this.player.width < window.innerWidth) {
+      } else {
         this.velocity[0] = 500;
       }
     } else if (keys["a"] && last_key == "a") {
       // walk left
-      if (collidingLeft) {
+      if (collidingLeft || this.player.x - 130 <= 0) {
         this.velocity[0] = 0;
-      } else if (this.player.x > 0) {
+      } else {
         this.velocity[0] = -500;
       }
       
@@ -143,7 +142,7 @@ class Player {
     }
     if (e.key == "w" && !this.jumping) {
       // jump
-      this.velocity[1] = -1000;
+      this.velocity[1] = -1700;
       this.jumping = true;
       this.crouching = false;
       this.animation = "jump";
@@ -168,7 +167,7 @@ class Player {
 
   click = (e) => {
     if (this.curr_move == "none" && !this.attacking) {
-      if (e.button == 0) {
+      if (e.button == 0 && !this.jumping && !this.crouching) {
         this.curr_move = "punch";
       } else if (e.button == 2) {
         this.curr_move = "kick";
@@ -621,8 +620,8 @@ class Update {
   checkPlayerCollision = () => {
       // player 1 left player 2 right
       if (
-          this.player1Pos[0] + 150 >= this.player2Pos[0] - 150 &&
-          this.player1Pos[0] - 150 <= this.player2Pos[0] + 150 &&
+          this.player1Pos[0] + 130 >= this.player2Pos[0] - 130 &&
+          this.player1Pos[0] - 130 <= this.player2Pos[0] + 130 &&
           this.player1Pos[1] <= this.player2Pos[1] + 500 &&
           this.player1Pos[1] + 500 >= this.player2Pos[1]
       ) {
@@ -637,8 +636,8 @@ class Update {
 
       // player 1 right player 2 left
       if (
-          this.player2Pos[0] + 150 >= this.player1Pos[0] - 150 &&
-          this.player2Pos[0] - 150 <= this.player1Pos[0] + 150 &&
+          this.player2Pos[0] + 130 >= this.player1Pos[0] - 130 &&
+          this.player2Pos[0] - 130 <= this.player1Pos[0] + 130 &&
           this.player2Pos[1] <= this.player1Pos[1] + 500 &&
           this.player2Pos[1] + 500 >= this.player1Pos[1]
       ) {
