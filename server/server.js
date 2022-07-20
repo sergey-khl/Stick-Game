@@ -73,7 +73,9 @@ io.sockets.on('connection', (socket) => {
                 'keys': data['keys'],
                 'last': data['last'],
                 'jumping': data['jumping'],
-                'crouching': data['crouching']
+                'crouching': data['crouching'],
+                'collidingLeft': data['collidingLeft'],
+                'collidingRight': data['collidingRight']
             })
         } else if (data['player'] == 2) {
             player2Pos = data['position'];
@@ -86,13 +88,19 @@ io.sockets.on('connection', (socket) => {
                 'keys': data['keys'],
                 'last': data['last'],
                 'jumping': data['jumping'],
-                'crouching': data['crouching']
+                'crouching': data['crouching'],
+                'collidingLeft': data['collidingLeft'],
+                'collidingRight': data['collidingRight']
             })
         }
     })
 
     socket.on('damage', (data) => {
         io.emit('damage', data);
+    })
+
+    socket.on('collide', (data) => {
+        io.emit('collide', data);
     })
 
     socket.on('win', (winner) => {

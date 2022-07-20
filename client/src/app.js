@@ -33,6 +33,8 @@ class Player {
     this.comp = comp;
     this.left = false;
     this.attacking = false;
+    this.collidingLeft = false;
+    this.collidingRight = false;
 
     // initial position
     this.player = new Container();
@@ -60,18 +62,25 @@ class Player {
     const last_key = data["last"];
     const jumping = data["jumping"];
     const crouching = data["crouching"];
-    //const colliding = this.collide();
+    const collidingLeft = data['collidingLeft'];
+    const collidingRight = data['collidingRight'];
+    console.log(this.num, keys['d'], last_key, this.left)
 
     if (keys["d"] && last_key == "d") {
       // walk right
-      if (this.player.x + this.player.width < window.innerWidth) {
+      if (collidingRight) {
+        this.velocity[0] = 0;
+      } else if (this.player.x + this.player.width < window.innerWidth) {
         this.velocity[0] = 500;
       }
     } else if (keys["a"] && last_key == "a") {
       // walk left
-      if (this.player.x > 0) {
+      if (collidingLeft) {
+        this.velocity[0] = 0;
+      } else if (this.player.x > 0) {
         this.velocity[0] = -500;
       }
+      
     } else if (!keys["a"] && !keys["d"]) {
       // idle
       this.velocity[0] = 0;
@@ -209,7 +218,6 @@ class Player {
           setTimeout(() => {
             this.attacking = false;
             this.animation = "idle";
-            console.log("done");
           }, (5 * 500 * delta) / 11);
         }, (3 * 500 * delta) / 11);
       }, (3 * 500 * delta) / 11);
@@ -250,26 +258,18 @@ class Player {
   // move left/right
   move = (delta) => {
     socket.emit("action", {
-      player: this.num,
-      keys: this.keys,
-      last: this.last_key,
-      jumping: this.jumping,
-      crouching: this.crouching,
-      position: this.getInfo(),
-      animation: this.animation,
-      switch: this.switch,
-      attackCollisionPos: this.attackCollisionPos,
+      'player': this.num,
+      'keys': this.keys,
+      'last': this.last_key,
+      'jumping': this.jumping,
+      'crouching': this.crouching,
+      'position': this.getInfo(),
+      'animation': this.animation,
+      'switch': this.switch,
+      'attackCollisionPos': this.attackCollisionPos,
+      'collidingLeft': this.collidingLeft,
+      'collidingRight': this.collidingRight
     });
-  };
-
-  // draw over punch with hitbox
-  s_punch = (delta) => {
-    this.drawPunch(
-      this.player.position.x + this.player.width + 130,
-      this.player.position.y + 120,
-      170,
-      50
-    );
   };
 
   getPosition = (delta) => {
@@ -297,6 +297,18 @@ class Player {
     this.attackCollisionPos = [x, y, width, height, damage, attacking];
   };
 
+  setCollide = (collision) => {
+    if (collision == 'left') {
+      this.collidingLeft = true;
+    } else if (collision == 'right') {
+      this.collidingRight = true;
+    } else if (collision == 'nleft') {
+      this.collidingLeft = false;
+    } else if (collision == 'nright') {
+      this.collidingRight = false;
+    }
+  }
+
   getSocket = () => {
     return this.socket;
   };
@@ -312,6 +324,10 @@ class Player {
   getLeft = () => {
     return this.left;
   };
+
+  isComp = () => {
+    return this.comp;
+  }
 
   flip = () => {
     this.left = !this.left;
@@ -393,14 +409,26 @@ class Update {
     });
     app.stage.addChild(this.time);
 
+
     socket.on("damage", (data) => {
-      console.log(data);
-      if (data[1] == 1) {
+      if (this.attackCollisionPos1 && this.attackCollisionPos1[5] && data[1] == 1) {
+        this.attackCollisionPos1 = [null, null, null, null, null, false];
+        player1.setAttackCollision(null, null, null, null, null, false);
         this.health2 -= data[0];
-      } else if (data[1] == 2) {
+      } else if (this.attackCollisionPos2 && this.attackCollisionPos2[5] && data[1] == 2) {
+        this.attackCollisionPos2 = [null, null, null, null, null, false];
+        player2.setAttackCollision(null, null, null, null, null, false);
         this.health1 -= data[0];
       }
     });
+
+    socket.on("collide", (data) => {
+        if (data[1] == 1) {
+            player1.setCollide(data[0]);
+        } else if (data[1] == 2) {
+            player2.setCollide(data[0]);
+        }
+    })
 
     this.player1Pos = [window.innerWidth / 3 - 75, player_height];
     this.player2Pos = [(window.innerWidth * 2) / 3 - 75, player_height];
@@ -505,20 +533,19 @@ class Update {
     this.stick2.x = this.player2Pos[0];
     this.stick2.y = this.player2Pos[1];
 
-    // TODO: may need to change pos of flip
-    if (this.stick1.x < this.stick2.x + 75 && player1.getLeft() == true) {
+    if (this.stick1.x < this.stick2.x && player1.getLeft() == true) {
       player1.flip();
       this.stick1.scale.x *= -1;
     }
-    if (this.stick1.x >= this.stick2.x + 75 && player1.getLeft() == false) {
+    if (this.stick1.x >= this.stick2.x && player1.getLeft() == false) {
       player1.flip();
       this.stick1.scale.x *= -1;
     }
-    if (this.stick2.x < this.stick1.x + 75 && player2.getLeft() == true) {
+    if (this.stick2.x < this.stick1.x && player2.getLeft() == true) {
       player2.flip();
       this.stick2.scale.x *= -1;
     }
-    if (this.stick2.x >= this.stick1.x + 75 && player2.getLeft() == false) {
+    if (this.stick2.x >= this.stick1.x && player2.getLeft() == false) {
       player2.flip();
       this.stick2.scale.x *= -1;
     }
@@ -540,7 +567,6 @@ class Update {
     // check if first player is dealing damage
     if (this.attackCollisionPos1) {
       if (
-        this.attackCollisionPos1[5] &&
         this.attackCollisionPos1[0] + this.attackCollisionPos1[2] >=
           this.player2Pos[0] - 75 &&
         this.attackCollisionPos1[0] <= this.player2Pos[0] + 75 &&
@@ -548,10 +574,7 @@ class Update {
         this.attackCollisionPos1[1] + this.attackCollisionPos1[3] >=
           this.player2Pos[1]
       ) {
-        console.log("player 1 hitting");
         socket.emit("damage", [this.attackCollisionPos1[4], 1]);
-        player1.setAttackCollision(null, null, null, null, null, false);
-        this.attackCollisionPos1 = [null, null, null, null, null, false];
       }
 
       if (
@@ -563,10 +586,7 @@ class Update {
         this.attackCollisionPos1[1] + this.attackCollisionPos1[3] >=
           this.player2Pos[1]
       ) {
-        console.log("player 1 hitting");
         socket.emit("damage", [this.attackCollisionPos1[4], 1]);
-        player1.setAttackCollision(null, null, null, null, null, false);
-        this.attackCollisionPos1 = [null, null, null, null, null, false];
       }
     }
 
@@ -581,10 +601,7 @@ class Update {
         this.attackCollisionPos2[1] + this.attackCollisionPos2[3] >=
           this.player1Pos[1]
       ) {
-        console.log("player 2 hitting");
         socket.emit("damage", [this.attackCollisionPos2[4], 2]);
-        player2.setAttackCollision(null, null, null, null, null, false);
-        this.attackCollisionPos2 = [null, null, null, null, null, false];
       }
       if (
         this.attackCollisionPos2[5] &&
@@ -595,31 +612,45 @@ class Update {
         this.attackCollisionPos2[1] + this.attackCollisionPos2[3] >=
           this.player1Pos[1]
       ) {
-        console.log("player 2 hitting");
         socket.emit("damage", [this.attackCollisionPos2[4], 2]);
-        player2.setAttackCollision(null, null, null, null, null, false);
-        this.attackCollisionPos2 = [null, null, null, null, null, false];
       }
     }
   };
 
-  // // check for player collision
-  // checkPlayerCollision = () => {
-  //     if (this.num == 1) {
-  //         const player2Position = player2.getPosition();
-  //         if (this.player.position.x + this.player.width + 250 >= player2Position[0] + 75 && this.player.position.y <= player2Position[1] + player2Position[3] && this.player.position.y + this.player.height >= player2Position[1]){
-  //             console.log('colliding 1');
-  //             return true;
-  //         }
-  //     } else {
-  //         const player1Position = player1.getPosition();
-  //         if (this.player.position.x + 75 <= player1Position[0] + player1Position[2] + 250 && this.player.position.y <= player1Position[1] + player1Position[3] && this.player.position.y + this.player.height >= player1Position[1]){
-  //             console.log('colliding 2');
-  //             return true;
-  //         }
-  //     }
-  //     return false;
-  // }
+  // check for player collision
+  checkPlayerCollision = () => {
+      // player 1 left player 2 right
+      if (
+          this.player1Pos[0] + 150 >= this.player2Pos[0] - 150 &&
+          this.player1Pos[0] - 150 <= this.player2Pos[0] + 150 &&
+          this.player1Pos[1] <= this.player2Pos[1] + 500 &&
+          this.player1Pos[1] + 500 >= this.player2Pos[1]
+      ) {
+          if (!player1.getLeft() && player2.getLeft()) {
+              socket.emit("collide", ['right', 1]);
+              socket.emit("collide", ['left', 2]);
+          }
+      } else {
+          socket.emit("collide", ['nright', 1]);
+          socket.emit("collide", ['nleft', 2]);
+      }
+
+      // player 1 right player 2 left
+      if (
+          this.player2Pos[0] + 150 >= this.player1Pos[0] - 150 &&
+          this.player2Pos[0] - 150 <= this.player1Pos[0] + 150 &&
+          this.player2Pos[1] <= this.player1Pos[1] + 500 &&
+          this.player2Pos[1] + 500 >= this.player1Pos[1]
+      ) {
+          if (player1.getLeft() && !player2.getLeft()) {
+              socket.emit("collide", ['left', 1]);
+              socket.emit("collide", ['right', 2]);
+          }  
+      } else {
+          socket.emit("collide", ['nleft', 1]);
+          socket.emit("collide", ['nright', 2]);
+      }
+  }
 
   animate = () => {
     switch (this.animation1) {
@@ -789,6 +820,7 @@ socket.on("update", (data) => {
   update.drawHealth();
   update.drawPlayers();
   update.checkAttackCollision();
+  update.checkPlayerCollision();
 });
 
 // predict movement
