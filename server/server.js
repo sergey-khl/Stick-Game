@@ -30,10 +30,10 @@ let player1Pos;
 let player2Pos;
 let animation1;
 let animation2;
-let switch1;
-let switch2;
 let attackCollisionPos1;
 let attackCollisionPos2;
+let health1 = 100;
+let health2 = 100;
 
 io.sockets.on('connection', (socket) => {
     // first connectiion
@@ -65,7 +65,6 @@ io.sockets.on('connection', (socket) => {
         if (data['player'] == 1) {
             player1Pos = data['position'];
             animation1 = data['animation'];
-            switch1 = data['switch'];
             attackCollisionPos1 = data['attackCollisionPos'];
 
             io.emit('user-input', {
@@ -80,7 +79,6 @@ io.sockets.on('connection', (socket) => {
         } else if (data['player'] == 2) {
             player2Pos = data['position'];
             animation2 = data['animation'];
-            switch2 = data['switch'];
             attackCollisionPos2 = data['attackCollisionPos'];
 
             io.emit('user-input', {
@@ -96,7 +94,17 @@ io.sockets.on('connection', (socket) => {
     })
 
     socket.on('damage', (data) => {
-        io.emit('damage', data);
+        if (data[1] == 1 && attackCollisionPos1[5]) {
+            attackCollisionPos1 = [null, null, null, null, null, false];
+            health2 -= data[0];
+            io.emit('stop-attack', 1)
+            io.emit('health', [2, health2])
+        } else if (data[1] == 2 && attackCollisionPos2[5]) {
+            attackCollisionPos2 = [null, null, null, null, null, false];
+            health1 -= data[0];
+            io.emit('stop-attack', 2)
+            io.emit('health', [1, health1]);
+        }
     })
 
     socket.on('collide', (data) => {

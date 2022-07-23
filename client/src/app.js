@@ -14,6 +14,9 @@ let player1;
 let player2;
 let update;
 let socket;
+// scale according to screen of developed on monitor
+let scalex = window.innerWidth / 1920
+let scaley = window.innerHeight / 969;
 
 class Player {
   constructor(initx, inity, socketId, num, comp) {
@@ -23,7 +26,7 @@ class Player {
     this.curr_animation = "idle";
     this.velocity = [0, 0];
     this.acceleration = [0, 0];
-    this.gravity = 40;
+    this.gravity = 60;
     this.last_key;
     this.curr_move = "none";
     this.keys = { w: false, a: false, s: false, d: false };
@@ -40,8 +43,6 @@ class Player {
     this.player = new Container();
     this.player.position.x = initx;
     this.player.position.y = inity;
-    this.player.width = 250;
-    this.player.height = 500;
     app.stage.addChild(this.player);
 
     this.attackCollisionPos = [null, null, null, null, null, false];
@@ -67,14 +68,14 @@ class Player {
 
     if (keys["d"] && last_key == "d") {
       // walk right
-      if (collidingRight || this.player.x + 130 >= window.innerWidth) {
+      if (collidingRight) {
         this.velocity[0] = 0;
       } else {
         this.velocity[0] = 500;
       }
     } else if (keys["a"] && last_key == "a") {
       // walk left
-      if (collidingLeft || this.player.x - 130 <= 0) {
+      if (collidingLeft) {
         this.velocity[0] = 0;
       } else {
         this.velocity[0] = -500;
@@ -142,7 +143,7 @@ class Player {
     }
     if (e.key == "w" && !this.jumping) {
       // jump
-      this.velocity[1] = -1700;
+      this.velocity[1] = -1500;
       this.jumping = true;
       this.crouching = false;
       this.animation = "jump";
@@ -193,7 +194,7 @@ class Player {
       setTimeout(() => {
         if (this.getLeft()) {
           this.setAttackCollision(
-            this.player.x - 75,
+            this.player.x,
             this.player.y + 100,
             -150,
             70,
@@ -202,7 +203,7 @@ class Player {
           );
         } else {
           this.setAttackCollision(
-            this.player.x + 75,
+            this.player.x,
             this.player.y + 100,
             150,
             70,
@@ -264,7 +265,6 @@ class Player {
       'crouching': this.crouching,
       'position': this.getInfo(),
       'animation': this.animation,
-      'switch': this.switch,
       'attackCollisionPos': this.attackCollisionPos,
       'collidingLeft': this.collidingLeft,
       'collidingRight': this.collidingRight
@@ -301,9 +301,8 @@ class Player {
       this.collidingLeft = true;
     } else if (collision == 'right') {
       this.collidingRight = true;
-    } else if (collision == 'nleft') {
+    } else if (collision == 'none') {
       this.collidingLeft = false;
-    } else if (collision == 'nright') {
       this.collidingRight = false;
     }
   }
@@ -375,11 +374,11 @@ class Update {
     this.remaining1 = new Graphics();
     this.healthContainer1.addChild(health_total1);
     this.healthContainer1.addChild(this.remaining1);
-    this.healthContainer1.x = 100;
-    this.healthContainer1.y = 50;
+    this.healthContainer1.x = 100 * scalex;
+    this.healthContainer1.y = 50 * scaley;
     health_total1
       .beginFill(0xff0000)
-      .drawRect(0, 0, window.innerWidth / 2 - 200, 50); // player 1
+      .drawRect(0, 0, (window.innerWidth / 2 - 200) * scalex, 50 * scaley); // player 1
 
     this.health2 = 100;
     this.healthContainer2 = new Container();
@@ -388,11 +387,11 @@ class Update {
     this.remaining2 = new Graphics();
     this.healthContainer2.addChild(health_total2);
     this.healthContainer2.addChild(this.remaining2);
-    this.healthContainer2.x = window.innerWidth / 2 + 100;
-    this.healthContainer2.y = 50;
+    this.healthContainer2.x = (window.innerWidth / 2 + 100) * scalex;
+    this.healthContainer2.y = 50 * scaley;
     health_total2
       .beginFill(0xff0000)
-      .drawRect(0, 0, window.innerWidth / 2 - 200, 50); // player 2
+      .drawRect(0, 0, (window.innerWidth / 2 - 200) * scalex, 50 * scaley); // player 2
 
     this.time = new PIXI.Text("99", {
       fill: "#333333",
@@ -400,8 +399,9 @@ class Update {
       fontWeight: "bold",
       align: "center",
     });
-    this.time.position.x = window.innerWidth / 2 - 20;
-    this.time.position.y = 50;
+    this.time.position.x = (window.innerWidth / 2 - 20) * scalex;
+    this.time.position.y = 50 * scaley
+    this.time.fontSize = 40 * scalex
 
     socket.on("time", (time) => {
       this.time.text = time.toString();
@@ -409,16 +409,22 @@ class Update {
     app.stage.addChild(this.time);
 
 
-    socket.on("damage", (data) => {
-      if (this.attackCollisionPos1 && this.attackCollisionPos1[5] && data[1] == 1) {
+    socket.on("health", (data) => {
+      if (data[0] == 1) {
+        this.health1 = data[1];
+      } else if (data[0] == 2) {
+        this.health2 = data[1];
+      }     
+    });
+
+    socket.on("stop-attack", (player) => {
+      if (player == 1) {
         this.attackCollisionPos1 = [null, null, null, null, null, false];
         player1.setAttackCollision(null, null, null, null, null, false);
-        this.health2 -= data[0];
-      } else if (this.attackCollisionPos2 && this.attackCollisionPos2[5] && data[1] == 2) {
+      } else if (player == 2) {
         this.attackCollisionPos2 = [null, null, null, null, null, false];
         player2.setAttackCollision(null, null, null, null, null, false);
-        this.health1 -= data[0];
-      }
+      }     
     });
 
     socket.on("collide", (data) => {
@@ -429,8 +435,8 @@ class Update {
         }
     })
 
-    this.player1Pos = [window.innerWidth / 3 - 75, player_height];
-    this.player2Pos = [(window.innerWidth * 2) / 3 - 75, player_height];
+    this.player1Pos = [window.innerWidth / 3, player_height];
+    this.player2Pos = [(window.innerWidth * 2) / 3, player_height];
     this.animation1 = "idle";
     this.curranimation1 = "none";
     this.animation2 = "idle";
@@ -469,10 +475,14 @@ class Update {
     this.stick1 = new PIXI.AnimatedSprite(this.idle_textures);
     this.stick1.animationSpeed = 0.2;
     this.stick1.anchor.x = 0.5;
+    this.stick1.width = 200 * scalex;
+    this.stick1.height = 350 * scaley;
     this.stick1.filters = [this.filter];
     this.stick2 = new PIXI.AnimatedSprite(this.idle_textures);
     this.stick1.animationSpeed = 0.2;
     this.stick2.anchor.x = 0.5;
+    this.stick2.width = 200 * scalex;
+    this.stick2.height = 350  * scaley;
     this.stick2.filters = [this.filter];
     app.stage.addChild(this.stick1);
     app.stage.addChild(this.stick2);
@@ -509,20 +519,39 @@ class Update {
     }
   }
 
+  scale = () => {
+    this.player1Pos[0] *= scalex;
+    this.player1Pos[1] *= scaley;
+    this.player2Pos[0] *= scalex;
+    this.player2Pos[1] *= scaley;
+    if (this.attackCollisionPos1 && this.attackCollisionPos1[0] && this.attackCollisionPos1[1] && this.attackCollisionPos1[2] && this.attackCollisionPos1[3]) {
+      this.attackCollisionPos1[0] *= scalex;
+      this.attackCollisionPos1[1] *= scaley;
+      this.attackCollisionPos1[2] *= scalex;
+      this.attackCollisionPos1[3] *= scaley;
+    }
+    if (this.attackCollisionPos2 && this.attackCollisionPos2[0] && this.attackCollisionPos2[1] && this.attackCollisionPos2[2] && this.attackCollisionPos2[3]) {
+      this.attackCollisionPos2[0] *= scalex;
+      this.attackCollisionPos2[1] *= scaley;
+      this.attackCollisionPos2[2] *= scalex;
+      this.attackCollisionPos2[3] *= scaley;
+    }
+  }
+
   drawHealth = () => {
     this.remaining1.clear();
     this.remaining2.clear();
     this.remaining1
       .beginFill(0x00ff00)
       .drawRect(
-        window.innerWidth / 2 - 200,
+        (window.innerWidth / 2 - 200) * scalex,
         0,
-        -((this.health1 / 100) * (window.innerWidth / 2 - 200)),
-        50
+        -((this.health1 / 100) * (window.innerWidth / 2 - 200)) * scalex,
+        50 * scaley
       );
     this.remaining2
       .beginFill(0x00ff00)
-      .drawRect(0, 0, (this.health2 / 100) * (window.innerWidth / 2 - 200), 50);
+      .drawRect(0, 0, (this.health2 / 100) * (window.innerWidth / 2 - 200) * scalex, 50 * scaley);
   };
 
   drawPlayers = () => {
@@ -565,23 +594,24 @@ class Update {
   checkAttackCollision = () => {
     // check if first player is dealing damage
     if (this.attackCollisionPos1) {
+      //this.drawHitBox(this.attackCollisionPos1[0], this.attackCollisionPos1[1], this.attackCollisionPos1[2], this.attackCollisionPos1[3])
       if (
+        this.attackCollisionPos1[5] &&
         this.attackCollisionPos1[0] + this.attackCollisionPos1[2] >=
-          this.player2Pos[0] - 75 &&
-        this.attackCollisionPos1[0] <= this.player2Pos[0] + 75 &&
-        this.attackCollisionPos1[1] <= this.player2Pos[1] + 500 &&
-        this.attackCollisionPos1[1] + this.attackCollisionPos1[3] >=
-          this.player2Pos[1]
+          this.player2Pos[0] - 75 * scalex &&
+        this.attackCollisionPos1[0] <= this.player2Pos[0] + 75 * scalex &&
+        this.attackCollisionPos1[1] <= this.player2Pos[1] + 350 * scaley &&
+        this.attackCollisionPos1[1] + this.attackCollisionPos1[3] >= this.player2Pos[1]
       ) {
         socket.emit("damage", [this.attackCollisionPos1[4], 1]);
       }
 
       if (
         this.attackCollisionPos1[5] &&
-        this.attackCollisionPos1[0] >= this.player2Pos[0] - 75 &&
+        this.attackCollisionPos1[0] >= this.player2Pos[0] - 75 * scalex &&
         this.attackCollisionPos1[0] + this.attackCollisionPos1[2] <=
-          this.player2Pos[0] + 75 &&
-        this.attackCollisionPos1[1] <= this.player2Pos[1] + 500 &&
+          this.player2Pos[0] + 75 * scalex &&
+        this.attackCollisionPos1[1] <= this.player2Pos[1] + 350 * scaley &&
         this.attackCollisionPos1[1] + this.attackCollisionPos1[3] >=
           this.player2Pos[1]
       ) {
@@ -591,12 +621,13 @@ class Update {
 
     // check if second player is dealing damage
     if (this.attackCollisionPos2) {
+      //this.drawHitBox(this.attackCollisionPos2[0], this.attackCollisionPos2[1], this.attackCollisionPos2[2], this.attackCollisionPos2[3])
       if (
         this.attackCollisionPos2[5] &&
         this.attackCollisionPos2[0] + this.attackCollisionPos2[2] >=
-          this.player1Pos[0] - 75 &&
-        this.attackCollisionPos2[0] <= this.player1Pos[0] + 75 &&
-        this.attackCollisionPos2[1] <= this.player1Pos[1] + 500 &&
+          this.player1Pos[0] - 75 * scalex &&
+        this.attackCollisionPos2[0] <= this.player1Pos[0] + 75 * scalex &&
+        this.attackCollisionPos2[1] <= this.player1Pos[1] + 350 * scaley &&
         this.attackCollisionPos2[1] + this.attackCollisionPos2[3] >=
           this.player1Pos[1]
       ) {
@@ -604,10 +635,10 @@ class Update {
       }
       if (
         this.attackCollisionPos2[5] &&
-        this.attackCollisionPos2[0] >= this.player1Pos[0] - 75 &&
+        this.attackCollisionPos2[0] >= this.player1Pos[0] - 75 * scalex &&
         this.attackCollisionPos2[0] + this.attackCollisionPos2[2] <=
-          this.player1Pos[0] + 75 &&
-        this.attackCollisionPos2[1] <= this.player1Pos[1] + 500 &&
+          this.player1Pos[0] + 75 * scalex &&
+        this.attackCollisionPos2[1] <= this.player1Pos[1] + 350 * scaley &&
         this.attackCollisionPos2[1] + this.attackCollisionPos2[3] >=
           this.player1Pos[1]
       ) {
@@ -618,36 +649,42 @@ class Update {
 
   // check for player collision
   checkPlayerCollision = () => {
-      // player 1 left player 2 right
-      if (
-          this.player1Pos[0] + 130 >= this.player2Pos[0] - 130 &&
-          this.player1Pos[0] - 130 <= this.player2Pos[0] + 130 &&
-          this.player1Pos[1] <= this.player2Pos[1] + 500 &&
-          this.player1Pos[1] + 500 >= this.player2Pos[1]
+      let colliding = false;
+      if ( // collide with each other
+          this.player1Pos[0] + 90 * scalex >= this.player2Pos[0] - 90 * scalex &&
+          this.player1Pos[0] - 90 * scalex <= this.player2Pos[0] + 90 * scalex &&
+          this.player1Pos[1] <= this.player2Pos[1] + 225 * scaley &&
+          this.player1Pos[1] + 225 * scaley >= this.player2Pos[1]
       ) {
           if (!player1.getLeft() && player2.getLeft()) {
+              colliding = true;
               socket.emit("collide", ['right', 1]);
               socket.emit("collide", ['left', 2]);
-          }
-      } else {
-          socket.emit("collide", ['nright', 1]);
-          socket.emit("collide", ['nleft', 2]);
-      }
-
-      // player 1 right player 2 left
-      if (
-          this.player2Pos[0] + 130 >= this.player1Pos[0] - 130 &&
-          this.player2Pos[0] - 130 <= this.player1Pos[0] + 130 &&
-          this.player2Pos[1] <= this.player1Pos[1] + 500 &&
-          this.player2Pos[1] + 500 >= this.player1Pos[1]
-      ) {
-          if (player1.getLeft() && !player2.getLeft()) {
+          } else if (player1.getLeft() && !player2.getLeft()) {
+              colliding = true;
               socket.emit("collide", ['left', 1]);
               socket.emit("collide", ['right', 2]);
-          }  
-      } else {
-          socket.emit("collide", ['nleft', 1]);
-          socket.emit("collide", ['nright', 2]);
+          }
+      }
+      
+      if (this.player2Pos[0] + 95 * scalex >= ground_width && player2.getLeft()) { // collide with wall
+          colliding = true;
+          socket.emit("collide", ['right', 2]);
+      } else if (this.player1Pos[0] + 95 * scalex >= ground_width && player1.getLeft()) { // collide with wall
+          colliding = true;
+          socket.emit("collide", ['right', 1]);
+      } else if (this.player2Pos[0] - 95 * scalex <= 0 && !player2.getLeft()) { // collide with wall
+          colliding = true;
+          socket.emit("collide", ['left', 2]);
+      } else if (this.player1Pos[0] - 95 * scalex <= 0 && !player1.getLeft()) { // collide with wall
+          colliding = true;
+          socket.emit("collide", ['left', 1]);
+      }
+      
+      
+      if (!colliding) {
+          socket.emit("collide", ['none', 1]);
+          socket.emit("collide", ['none', 2]);
       }
   }
 
@@ -732,19 +769,17 @@ class Update {
   };
 }
 
-const ground_width = window.innerWidth;
-const ground_height = window.innerHeight / 10;
-const player_height = window.innerHeight - ground_height - 500;
-const player_crouch_height = window.innerHeight - 250 - ground_height;
-const gravity = 1;
+const ground_width = window.innerWidth * scalex;
+const ground_height = window.innerHeight / 10 ;
+const player_height = window.innerHeight - ground_height - 350;
 
 // add ground to screen
-const ground = new Graphics();
+const ground = new Graphics();  
 ground
   .beginFill(0x964b00)
   .drawRect(
     0,
-    window.innerHeight - ground_height,
+    window.innerHeight * scalex - ground_height,
     ground_width,
     ground_height * 3
   )
@@ -785,10 +820,10 @@ socket = io();
 socket.on("player", (player) => {
   if (player == 1) {
     // add first player to screen
-    player1Pos = [window.innerWidth / 3 - 75, player_height];
+    player1Pos = [window.innerWidth / 3, player_height];
     player1 = new Player(player1Pos[0], player1Pos[1], socket.id, 1, false);
     player2 = new Player(
-      (window.innerWidth * 2) / 3 - 75,
+      (window.innerWidth * 2) / 3,
       player_height,
       socket.id,
       2,
@@ -798,9 +833,9 @@ socket.on("player", (player) => {
     socket.emit("confirm", [1, socket.id, player1Pos]);
   } else if (player == 2 && !player2) {
     // add second player to screen
-    player2Pos = [(window.innerWidth * 2) / 3 - 75, player_height];
+    player2Pos = [(window.innerWidth * 2) / 3, player_height];
     player1 = new Player(
-      window.innerWidth / 3 - 75,
+      window.innerWidth / 3,
       player_height,
       socket.id,
       1,
@@ -814,6 +849,7 @@ socket.on("player", (player) => {
 
 // done once a frame so 1/60 sec.
 socket.on("update", (data) => {
+  update.scale();
   player1.update();
   player2.update();
   update.drawHealth();
