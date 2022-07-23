@@ -130,6 +130,16 @@ setInterval(() => {
     }
 }, 1000 / FPS);
 
+let time = 99;
+
+// clock
+setInterval(() => {
+    if (conn1 && conn2 && time >= 0) {
+        io.emit('time', time);
+        time -= 1
+    }
+}, 1000);
+
 
 server.on('error', (err) => {
     console.log(err);
