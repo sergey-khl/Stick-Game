@@ -110,17 +110,22 @@ io.sockets.on('connection', (socket) => {
     socket.on('collide', (data) => {
         io.emit('collide', data);
     })
-
-    socket.on('win', (winner) => {
-        console.log('winner: ' + winner);
-        io.emit('win', winner);
-    })
 });
+
+let time = 9;
 
 // run game at 60 fps
 setInterval(() => {
     io.emit('update', () => {});
     if (conn1 && conn2) {
+        if (health1 == 0 && health2 == 0) {
+            io.emit('game-over', 0);
+        } else if (health1 <= 0) {
+            io.emit('game-over', 2);
+        } else if (health2 <= 0) {
+            io.emit('game-over', 1);
+        }
+
         conn1.emit('new-info', {
             '1': player1Pos,
             '2': player2Pos,
@@ -138,13 +143,19 @@ setInterval(() => {
     }
 }, 1000 / FPS);
 
-let time = 99;
-
 // clock
 setInterval(() => {
     if (conn1 && conn2 && time >= 0) {
         io.emit('time', time);
         time -= 1
+    } else if (time < 0) {
+        if (health1 > health2) {
+            io.emit('game-over', 1)
+        } else if (health1 < health2) {
+            io.emit('game-over', 2)
+        } else {
+            io.emit('game-over', 0)
+        }
     }
 }, 1000);
 

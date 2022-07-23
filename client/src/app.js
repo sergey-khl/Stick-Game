@@ -332,38 +332,6 @@ class Player {
   };
 }
 
-// class GameState {
-//   constructor() {
-//     // time
-//     this.time = 99;
-//     this.ticking = false;
-//     app.ticker.add(this.clock);
-//   }
-
-//   clock = (delta) => {
-//     if (this.time <= 0) {
-//       app.ticker.remove(this.clock);
-//       console.log("game over");
-//       if (player1.getHealth() > player2.getHealth()) {
-//         sock.emit("win", "1");
-//       } else if (player1.getHealth() > player2.getHealth()) {
-//         sock.emit("win", "2");
-//       } else {
-//         sock.emit("win", "0");
-//       }
-//       return;
-//     }
-//     if (!this.ticking) {
-//       this.ticking = true;
-//       setTimeout(() => {
-//         this.ticking = false;
-//         this.time -= 1;
-//         sock.emit("time", this.time);
-//       }, 1000 * delta);
-//     }
-//   };
-// }
-
 class Update {
   constructor() {
     // health bars
@@ -453,7 +421,7 @@ class Update {
       this.attackCollisionPos2 = data["attackCollisionPos2"];
     });
 
-    socket.on("win", (winner) => {
+    socket.on("game-over", (winner) => {
       console.log(winner);
     });
 
