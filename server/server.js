@@ -34,6 +34,8 @@ let attackCollisionPos1;
 let attackCollisionPos2;
 let health1 = 100;
 let health2 = 100;
+let currMove1 = 'none';
+let currMove2 = 'none';
 
 io.sockets.on('connection', (socket) => {
     // first connectiion
@@ -74,7 +76,8 @@ io.sockets.on('connection', (socket) => {
                 'jumping': data['jumping'],
                 'crouching': data['crouching'],
                 'collidingLeft': data['collidingLeft'],
-                'collidingRight': data['collidingRight']
+                'collidingRight': data['collidingRight'],
+                'attacking': data['attacking']
             })
         } else if (data['player'] == 2) {
             player2Pos = data['position'];
@@ -88,8 +91,19 @@ io.sockets.on('connection', (socket) => {
                 'jumping': data['jumping'],
                 'crouching': data['crouching'],
                 'collidingLeft': data['collidingLeft'],
-                'collidingRight': data['collidingRight']
+                'collidingRight': data['collidingRight'],
+                'attacking': data['attacking']
             })
+        }
+    })
+
+    socket.on('currMove', (data) => {
+        if (data[0] == 1) {
+            currMove1 = data[1];
+            io.emit('currMove', data);
+        } else if (data[0] == 2) {
+            currMove2 = data[1];
+            io.emit('currMove', data);
         }
     })
 
@@ -110,9 +124,29 @@ io.sockets.on('connection', (socket) => {
     socket.on('collide', (data) => {
         io.emit('collide', data);
     })
+
+    socket.on('knockback', (player) => {
+        
+        if (player == 1 && currMove1 != 'knockback') {
+            io.emit('setMove', [player, 'knockback'])
+            currMove1 = 'knockback';
+            setTimeout(() => {
+                io.emit('setMove', [player, 'none'])
+                console.log(currMove1);
+                currMove1 = 'none';
+            }, 1000 * 10 / FPS)
+        } else if (player == 2 && currMove2 != 'knockback') {
+            io.emit('setMove', [player, 'knockback'])
+            currMove2 = 'knockback';
+            setTimeout(() => {
+                io.emit('setMove', [player, 'none'])
+                currMove2 = 'none';
+            }, 1000 * 10 / FPS)
+        }
+    })
 });
 
-let time = 9;
+let time = 99;
 
 // run game at 60 fps
 setInterval(() => {

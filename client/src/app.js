@@ -15,6 +15,7 @@ let player2;
 let update;
 let socket;
 // scale according to screen of developed on monitor
+// TODO: scale by percentage of screen size
 let scalex = window.innerWidth / 1920
 let scaley = window.innerHeight / 969;
 
@@ -56,6 +57,7 @@ class Player {
       app.ticker.add(this.move);
       app.ticker.add(this.attack);
     }
+    app.ticker.add(this.curr_move_info);
   }
 
   userInput = (data) => {
@@ -65,15 +67,16 @@ class Player {
     const crouching = data["crouching"];
     const collidingLeft = data['collidingLeft'];
     const collidingRight = data['collidingRight'];
+    const attacking = data['attacking'];
 
-    if (keys["d"] && last_key == "d") {
+    if (keys["d"] && last_key == "d" && this.curr_move == "none") {
       // walk right
       if (collidingRight) {
         this.velocity[0] = 0;
       } else {
         this.velocity[0] = 500;
       }
-    } else if (keys["a"] && last_key == "a") {
+    } else if (keys["a"] && last_key == "a" && this.curr_move == "none") {
       // walk left
       if (collidingLeft) {
         this.velocity[0] = 0;
@@ -81,16 +84,36 @@ class Player {
         this.velocity[0] = -500;
       }
       
-    } else if (!keys["a"] && !keys["d"]) {
+    } else if (!keys["a"] && !keys["d"] && this.curr_move == "none") {
       // idle
       this.velocity[0] = 0;
     }
 
     // crouching
-    if (crouching && !jumping && !keys["a"] && !keys["d"]) {
+    if (crouching && !jumping && !keys["a"] && !keys["d"] && this.curr_move == "none") {
       this.velocity[0] = 0;
       this.animation = "crouch";
     }
+
+    if (this.curr_move != 'none') {
+      switch (this.curr_move) {
+        case "punch":
+          if (this.getLeft()) {
+            this.velocity[0] = -250;
+          } else {
+            this.velocity[0] = 250;
+          }
+          break;
+        case "knockback":
+          if (this.getLeft()) {
+            this.velocity[0] = 250;
+          } else {
+            this.velocity[0] = -250;
+          }
+          break;
+      }
+    }
+    
 
     // jumping
     if (jumping) {
@@ -181,14 +204,13 @@ class Player {
   };
 
   attack = (delta) => {
-    if (this.curr_move == "none") {
+    if (this.curr_move == "none" || this.curr_move == "knockback") {
       return;
     }
     this.attacking = true;
     if (this.curr_move == "punch") {
       // punch
       this.animation = "punch";
-      this.curr_move = "none";
 
       // start-up frames 3
       setTimeout(() => {
@@ -217,6 +239,7 @@ class Player {
           // recovery frames 5
           setTimeout(() => {
             this.attacking = false;
+            this.curr_move = "none";
             this.animation = "idle";
           }, (5 * 500 * delta) / 11);
         }, (3 * 500 * delta) / 11);
@@ -266,10 +289,15 @@ class Player {
       'position': this.getInfo(),
       'animation': this.animation,
       'attackCollisionPos': this.attackCollisionPos,
+      'attacking': this.attacking,
       'collidingLeft': this.collidingLeft,
       'collidingRight': this.collidingRight
     });
   };
+
+  curr_move_info = (delta) => {
+    socket.emit('currMove', [this.num, this.curr_move])
+  }
 
   getPosition = (delta) => {
     return [
@@ -296,6 +324,7 @@ class Player {
     this.attackCollisionPos = [x, y, width, height, damage, attacking];
   };
 
+  // indicate where the player is touching another
   setCollide = (collision) => {
     if (collision == 'left') {
       this.collidingLeft = true;
@@ -305,6 +334,10 @@ class Player {
       this.collidingLeft = false;
       this.collidingRight = false;
     }
+  }
+
+  setCurrMove = (currMove) => {
+    this.curr_move = currMove;
   }
 
   getSocket = () => {
@@ -380,8 +413,10 @@ class Update {
     socket.on("health", (data) => {
       if (data[0] == 1) {
         this.health1 = data[1];
+        socket.emit('knockback', 1)
       } else if (data[0] == 2) {
         this.health2 = data[1];
+        socket.emit('knockback', 2)
       }     
     });
 
@@ -395,13 +430,21 @@ class Update {
       }     
     });
 
-    socket.on("collide", (data) => {
-        if (data[1] == 1) {
-            player1.setCollide(data[0]);
-        } else if (data[1] == 2) {
-            player2.setCollide(data[0]);
+    socket.on("setMove", (data) => {
+        if (data[0] == 1) {
+            player1.setCurrMove(data[1]);
+        } else if (data[0] == 2) {
+            player2.setCurrMove(data[1]);
         }
     })
+
+    socket.on("collide", (data) => {
+      if (data[1] == 1) {
+          player1.setCollide(data[0]);
+      } else if (data[1] == 2) {
+          player2.setCollide(data[0]);
+      }
+  })
 
     this.player1Pos = [window.innerWidth / 3, player_height];
     this.player2Pos = [(window.innerWidth * 2) / 3, player_height];
@@ -487,6 +530,7 @@ class Update {
     }
   }
 
+  // adjust for screen size 
   scale = () => {
     this.player1Pos[0] *= scalex;
     this.player1Pos[1] *= scaley;
@@ -571,6 +615,8 @@ class Update {
         this.attackCollisionPos1[1] <= this.player2Pos[1] + 350 * scaley &&
         this.attackCollisionPos1[1] + this.attackCollisionPos1[3] >= this.player2Pos[1]
       ) {
+        console.log('1')
+        this.attackCollisionPos1[5] = false;
         socket.emit("damage", [this.attackCollisionPos1[4], 1]);
       }
 
@@ -583,6 +629,8 @@ class Update {
         this.attackCollisionPos1[1] + this.attackCollisionPos1[3] >=
           this.player2Pos[1]
       ) {
+        console.log('2')
+        this.attackCollisionPos1[5] = false;
         socket.emit("damage", [this.attackCollisionPos1[4], 1]);
       }
     }
@@ -599,6 +647,8 @@ class Update {
         this.attackCollisionPos2[1] + this.attackCollisionPos2[3] >=
           this.player1Pos[1]
       ) {
+        console.log('3')
+        this.attackCollisionPos2[5] = false;
         socket.emit("damage", [this.attackCollisionPos2[4], 2]);
       }
       if (
@@ -610,6 +660,8 @@ class Update {
         this.attackCollisionPos2[1] + this.attackCollisionPos2[3] >=
           this.player1Pos[1]
       ) {
+        console.log('4')
+        this.attackCollisionPos2[5] = false;
         socket.emit("damage", [this.attackCollisionPos2[4], 2]);
       }
     }
@@ -754,6 +806,7 @@ ground
   .endFill();
 app.stage.addChild(ground);
 
+// remove white background from animations
 function ChromaFilter() {
   const vertexShader = [
     "attribute vec2 aVertexPosition;",
@@ -834,6 +887,14 @@ socket.on("user-input", (userInput) => {
     player2.userInput(userInput);
   }
 });
+
+socket.on("currMove", (data) => {
+  if (data[0] == 1) {
+    player1.setCurrMove(data[1]);
+  } else if (data[0] == 2) {
+    player2.setCurrMove(data[1]);
+  }
+})
 
 // resize
 window.addEventListener("resize", resize);
