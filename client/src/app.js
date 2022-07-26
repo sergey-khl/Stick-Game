@@ -9,363 +9,49 @@ document.body.appendChild(app.view);
 
 const Graphics = PIXI.Graphics;
 const Container = PIXI.Container;
-const loader = PIXI.Loader.shared;
-let player1;
-let player2;
-let update;
-let socket;
-// scale according to screen of developed on monitor
-// TODO: scale by percentage of screen size
-let scalex = window.innerWidth / 1920
-let scaley = window.innerHeight / 969;
 
-class Player {
-  constructor(initx, inity, socketId, num, comp) {
-    this.jumping = false;
-    this.crouching = false;
-    this.animation = "idle";
-    this.curr_animation = "idle";
-    this.velocity = [0, 0];
-    this.acceleration = [0, 0];
-    this.gravity = 60;
-    this.last_key;
-    this.curr_move = "none";
-    this.keys = { w: false, a: false, s: false, d: false };
-    this.id = socketId;
-    this.lastUpdateTime = 0;
-    this.num = num;
-    this.comp = comp;
-    this.left = false;
-    this.attacking = false;
-    this.collidingLeft = false;
-    this.collidingRight = false;
+let keys = { 'last': '', 'w': false, 'a': false, 's': false, 'd': false, 'punch': false, 'kick': false };
+let drawer;
 
-    // initial position
-    this.player = new Container();
-    this.player.position.x = initx;
-    this.player.position.y = inity;
-    app.stage.addChild(this.player);
+// scale according to screen of developed on settings
+let scalex = window.innerWidth / 2000
+let scaley = window.innerHeight / 1000;
+const ground_width = window.innerWidth;
+const ground_height = window.innerHeight / 10 ;
+const player_height = window.innerHeight - ground_height - 400;
 
-    this.attackCollisionPos = [null, null, null, null, null, false];
-
-    // only do this if you are not a computer, mr. spy!
-    if (!comp) {
-      document.addEventListener("keydown", this.keyDown);
-      document.addEventListener("keyup", this.keyUp);
-      document.addEventListener("mousedown", this.click);
-      document.addEventListener("contextmenu", this.rclick);
-      app.ticker.add(this.move);
-      app.ticker.add(this.attack);
-    }
-    app.ticker.add(this.curr_move_info);
+const keyDown = (e) => {
+  keys[e.key] = true;
+  if (e.key == 'a' || e.key == 'd') {
+    keys['last'] = e.key;
   }
+};
 
-  userInput = (data) => {
-    const keys = data["keys"];
-    const last_key = data["last"];
-    const jumping = data["jumping"];
-    const crouching = data["crouching"];
-    const collidingLeft = data['collidingLeft'];
-    const collidingRight = data['collidingRight'];
-    const attacking = data['attacking'];
+const keyUp = (e) => {
+  keys[e.key] = false;
+};
 
-    if (keys["d"] && last_key == "d" && this.curr_move == "none") {
-      // walk right
-      if (collidingRight) {
-        this.velocity[0] = 0;
-      } else {
-        this.velocity[0] = 500;
-      }
-    } else if (keys["a"] && last_key == "a" && this.curr_move == "none") {
-      // walk left
-      if (collidingLeft) {
-        this.velocity[0] = 0;
-      } else {
-        this.velocity[0] = -500;
-      }
-      
-    } else if (!keys["a"] && !keys["d"] && this.curr_move == "none") {
-      // idle
-      this.velocity[0] = 0;
-    }
-
-    // crouching
-    if (crouching && !jumping && !keys["a"] && !keys["d"] && this.curr_move == "none") {
-      this.velocity[0] = 0;
-      this.animation = "crouch";
-    }
-
-    if (this.curr_move != 'none') {
-      switch (this.curr_move) {
-        case "punch":
-          if (this.getLeft()) {
-            this.velocity[0] = -250;
-          } else {
-            this.velocity[0] = 250;
-          }
-          break;
-        case "knockback":
-          if (this.getLeft()) {
-            this.velocity[0] = 250;
-          } else {
-            this.velocity[0] = -250;
-          }
-          break;
-      }
-    }
-    
-
-    // jumping
-    if (jumping) {
-      this.velocity[1] += this.gravity;
-      // end jump
-      if (this.player.y > player_height) {
-        this.acceleration = [0, 0];
-        this.velocity[1] = 0;
-        this.jumping = false;
-        if (this.velocity[0] != 0) {
-          this.animation = "walk";
-        } else {
-          this.animation = "idle";
-        }
-        this.player.y = player_height;
-      }
-    }
-  };
-
-  update() {
-    const currentTime = new Date().getTime();
-    let delta;
-    if (this.lastUpdateTime === 0) {
-      delta = 0;
-    } else {
-      delta = (currentTime - this.lastUpdateTime) / 1000;
-    }
-    this.player.x += this.velocity[0] * delta;
-    this.player.y += this.velocity[1] * delta;
-    this.velocity[0] += this.acceleration[0] * delta;
-    this.velocity[1] += this.acceleration[1] * delta;
-    this.acceleration = [0, 0];
-
-    this.lastUpdateTime = currentTime;
+const click = (e) => {
+  if (e.button == 0) {
+    keys['punch'] = true;
+  } else if (e.button == 2) {
+    keys['kick'] = true;
   }
+};
 
-  keyDown = (e) => {
-    this.keys[e.key] = true;
-    if (e.key == "s" && !this.crouching) {
-      // crouch
-      this.crouching = true;
-    }
-    if (e.key == "a" || e.key == "d") {
-      // move left/right
-      this.last_key = e.key;
-      this.crouching = false;
-      if (!this.jumping && !this.crouching && !this.attacking) {
-        this.animation = "walk";
-      }
-    }
-    if (e.key == "w" && !this.jumping) {
-      // jump
-      this.velocity[1] = -1500;
-      this.jumping = true;
-      this.crouching = false;
-      this.animation = "jump";
-    }
-  };
-
-  keyUp = (e) => {
-    this.keys[e.key] = false;
-    if (e.key == "s") {
-      this.crouching = false;
-    }
-    if (
-      !this.jumping &&
-      !this.crouching &&
-      !this.attacking &&
-      !this.keys["a"] &&
-      !this.keys["d"]
-    ) {
-      this.animation = "idle";
-    }
-  };
-
-  click = (e) => {
-    if (this.curr_move == "none" && !this.attacking) {
-      if (e.button == 0 && !this.jumping && !this.crouching) {
-        this.curr_move = "punch";
-      } else if (e.button == 2) {
-        this.curr_move = "kick";
-      }
-    }
-  };
-
-  rclick = (e) => {
-    e.preventDefault();
-  };
-
-  attack = (delta) => {
-    if (this.curr_move == "none" || this.curr_move == "knockback") {
-      return;
-    }
-    this.attacking = true;
-    if (this.curr_move == "punch") {
-      // punch
-      this.animation = "punch";
-
-      // start-up frames 3
-      setTimeout(() => {
-        if (this.getLeft()) {
-          this.setAttackCollision(
-            this.player.x,
-            this.player.y + 100,
-            -150,
-            70,
-            5,
-            true
-          );
-        } else {
-          this.setAttackCollision(
-            this.player.x,
-            this.player.y + 100,
-            150,
-            70,
-            5,
-            true
-          );
-        }
-        // active frames 3
-        setTimeout(() => {
-          this.setAttackCollision(null, null, null, null, null, false);
-          // recovery frames 5
-          setTimeout(() => {
-            this.attacking = false;
-            this.curr_move = "none";
-            this.animation = "idle";
-          }, (5 * 500 * delta) / 11);
-        }, (3 * 500 * delta) / 11);
-      }, (3 * 500 * delta) / 11);
-    } else if (this.curr_move == "kick") {
-      // kick need to implement
-      this.curr_move = "none";
-      this.drawKick(
-        this.player.position.x + this.player.width,
-        this.player.position.y + this.player.height / 2,
-        300 - this.player.width,
-        100
-      );
-      app.ticker.add(
-        this.hit(
-          this.player.position.x + this.player.width,
-          this.player.position.y + this.player.height / 2,
-          300 - this.player.width,
-          100,
-          7
-        )
-      );
-      setTimeout(() => {
-        this.leg.clear();
-        this.attacking = false;
-        app.ticker.remove(
-          this.hit(
-            this.player.position.x + this.player.width,
-            this.player.position.y + this.player.height / 2,
-            300 - this.player.width,
-            100,
-            7
-          )
-        );
-      }, 250 * delta);
-    }
-  };
-
-  // move left/right
-  move = (delta) => {
-    socket.emit("action", {
-      'player': this.num,
-      'keys': this.keys,
-      'last': this.last_key,
-      'jumping': this.jumping,
-      'crouching': this.crouching,
-      'position': this.getInfo(),
-      'animation': this.animation,
-      'attackCollisionPos': this.attackCollisionPos,
-      'attacking': this.attacking,
-      'collidingLeft': this.collidingLeft,
-      'collidingRight': this.collidingRight
-    });
-  };
-
-  curr_move_info = (delta) => {
-    socket.emit('currMove', [this.num, this.curr_move])
+const uClick = (e) => {
+  if (e.button == 0) {
+    keys['punch'] = false;
+  } else if (e.button == 2) {
+    keys['kick'] = false;
   }
+};
 
-  getPosition = (delta) => {
-    return [
-      this.player.position.x,
-      this.player.position.y,
-      this.player.width,
-      this.player.height,
-    ];
-  };
+const contextClick = (e) => {
+  e.preventDefault();
+};
 
-  getInfo = () => {
-    return [this.player.x, this.player.y];
-  };
-
-  getHealth = () => {
-    return this.health;
-  };
-
-  setHealth = (health) => {
-    this.health = health;
-  };
-
-  setAttackCollision = (x, y, width, height, damage, attacking) => {
-    this.attackCollisionPos = [x, y, width, height, damage, attacking];
-  };
-
-  // indicate where the player is touching another
-  setCollide = (collision) => {
-    if (collision == 'left') {
-      this.collidingLeft = true;
-    } else if (collision == 'right') {
-      this.collidingRight = true;
-    } else if (collision == 'none') {
-      this.collidingLeft = false;
-      this.collidingRight = false;
-    }
-  }
-
-  setCurrMove = (currMove) => {
-    this.curr_move = currMove;
-  }
-
-  getSocket = () => {
-    return this.socket;
-  };
-
-  getSocketId = () => {
-    return this.id;
-  };
-
-  getNum = () => {
-    return this.num;
-  };
-
-  getLeft = () => {
-    return this.left;
-  };
-
-  isComp = () => {
-    return this.comp;
-  }
-
-  flip = () => {
-    this.left = !this.left;
-  };
-}
-
-class Update {
+class Drawer {
   constructor() {
     // health bars
     this.health1 = 100;
@@ -375,11 +61,11 @@ class Update {
     this.remaining1 = new Graphics();
     this.healthContainer1.addChild(health_total1);
     this.healthContainer1.addChild(this.remaining1);
-    this.healthContainer1.x = 100 * scalex;
-    this.healthContainer1.y = 50 * scaley;
+    this.healthContainer1.x = window.innerWidth / 20;
+    this.healthContainer1.y = window.innerHeight / 20;
     health_total1
       .beginFill(0xff0000)
-      .drawRect(0, 0, (window.innerWidth / 2 - 200) * scalex, 50 * scaley); // player 1
+      .drawRect(0, 0, (window.innerWidth / 2 - window.innerWidth / 10), window.innerHeight / 20); // player 1
 
     this.health2 = 100;
     this.healthContainer2 = new Container();
@@ -388,11 +74,11 @@ class Update {
     this.remaining2 = new Graphics();
     this.healthContainer2.addChild(health_total2);
     this.healthContainer2.addChild(this.remaining2);
-    this.healthContainer2.x = (window.innerWidth / 2 + 100) * scalex;
-    this.healthContainer2.y = 50 * scaley;
+    this.healthContainer2.x = (window.innerWidth / 2 + window.innerWidth / 20);
+    this.healthContainer2.y = window.innerHeight / 20;
     health_total2
       .beginFill(0xff0000)
-      .drawRect(0, 0, (window.innerWidth / 2 - 200) * scalex, 50 * scaley); // player 2
+      .drawRect(0, 0, (window.innerWidth / 2 - window.innerWidth / 10), window.innerHeight / 20); // player 2
 
     this.time = new PIXI.Text("99", {
       fill: "#333333",
@@ -400,9 +86,10 @@ class Update {
       fontWeight: "bold",
       align: "center",
     });
-    this.time.position.x = (window.innerWidth / 2 - 20) * scalex;
-    this.time.position.y = 50 * scaley
-    this.time.fontSize = 40 * scalex
+    this.time.anchor.x = 0.5;
+    this.time.position.x = window.innerWidth / 2;
+    this.time.position.y = window.innerHeight / 20;
+    this.time.fontSize = 45 * scalex;
 
     socket.on("time", (time) => {
       this.time.text = time.toString();
@@ -410,56 +97,40 @@ class Update {
     app.stage.addChild(this.time);
 
 
-    socket.on("health", (data) => {
+    socket.on("damage", (data) => {
       if (data[0] == 1) {
         this.health1 = data[1];
-        socket.emit('knockback', 1)
+        //socket.emit('knockback', 1)
       } else if (data[0] == 2) {
         this.health2 = data[1];
-        socket.emit('knockback', 2)
+        //socket.emit('knockback', 2)
       }     
     });
-
-    socket.on("stop-attack", (player) => {
-      if (player == 1) {
-        this.attackCollisionPos1 = [null, null, null, null, null, false];
-        player1.setAttackCollision(null, null, null, null, null, false);
-      } else if (player == 2) {
-        this.attackCollisionPos2 = [null, null, null, null, null, false];
-        player2.setAttackCollision(null, null, null, null, null, false);
-      }     
-    });
-
-    socket.on("setMove", (data) => {
-        if (data[0] == 1) {
-            player1.setCurrMove(data[1]);
-        } else if (data[0] == 2) {
-            player2.setCurrMove(data[1]);
-        }
-    })
-
-    socket.on("collide", (data) => {
-      if (data[1] == 1) {
-          player1.setCollide(data[0]);
-      } else if (data[1] == 2) {
-          player2.setCollide(data[0]);
-      }
-  })
 
     this.player1Pos = [window.innerWidth / 3, player_height];
     this.player2Pos = [(window.innerWidth * 2) / 3, player_height];
+    this.player1Left = false;
+    this.player2Left = true;
     this.animation1 = "idle";
     this.curranimation1 = "none";
     this.animation2 = "idle";
     this.curranimation2 = "none";
-    this.attackCollisionPos1 = [null, null, null, null, null, false];
-    this.attackCollisionPos2 = [null, null, null, null, null, false];
+    this.attackCollisionPos1 = null;
+    this.attackCollisionPos2 = null;
+    this.hitBox1 = new Graphics();
+    this.hitBox2 = new Graphics();
+    app.stage.addChild(this.hitBox1);
+    app.stage.addChild(this.hitBox2);
 
     socket.on("new-info", (data) => {
-      this.player1Pos = data["1"];
-      this.player2Pos = data["2"];
-      this.animation1 = data["animation1"];
-      this.animation2 = data["animation2"];
+      this.player1Pos[0] = data["player1Info"][0];
+      this.player1Pos[1] = data["player1Info"][1];
+      this.animation1 = data["player1Info"][2];
+      this.player1Left = data["player1Info"][3];
+      this.player2Pos[0] = data["player2Info"][0];
+      this.player2Pos[1] = data["player2Info"][1];
+      this.animation2 = data["player2Info"][2];
+      this.player2Left = data["player2Info"][3];
       this.attackCollisionPos1 = data["attackCollisionPos1"];
       this.attackCollisionPos2 = data["attackCollisionPos2"];
     });
@@ -486,14 +157,14 @@ class Update {
     this.stick1 = new PIXI.AnimatedSprite(this.idle_textures);
     this.stick1.animationSpeed = 0.2;
     this.stick1.anchor.x = 0.5;
-    this.stick1.width = 200 * scalex;
-    this.stick1.height = 350 * scaley;
+    this.stick1.width = 250 * scalex;
+    this.stick1.height = 400 * scaley;
     this.stick1.filters = [this.filter];
     this.stick2 = new PIXI.AnimatedSprite(this.idle_textures);
     this.stick1.animationSpeed = 0.2;
     this.stick2.anchor.x = 0.5;
-    this.stick2.width = 200 * scalex;
-    this.stick2.height = 350  * scaley;
+    this.stick2.width = 250 * scalex;
+    this.stick2.height = 400  * scaley;
     this.stick2.filters = [this.filter];
     app.stage.addChild(this.stick1);
     app.stage.addChild(this.stick2);
@@ -556,14 +227,14 @@ class Update {
     this.remaining1
       .beginFill(0x00ff00)
       .drawRect(
-        (window.innerWidth / 2 - 200) * scalex,
+        (window.innerWidth / 2 - window.innerWidth / 10),
         0,
-        -((this.health1 / 100) * (window.innerWidth / 2 - 200)) * scalex,
-        50 * scaley
+        -((this.health1 / 100) * (window.innerWidth / 2 - window.innerWidth / 10)),
+        window.innerHeight / 20
       );
     this.remaining2
       .beginFill(0x00ff00)
-      .drawRect(0, 0, (this.health2 / 100) * (window.innerWidth / 2 - 200) * scalex, 50 * scaley);
+      .drawRect(0, 0, (this.health2 / 100) * (window.innerWidth / 2 - window.innerWidth / 10), window.innerHeight / 20);
   };
 
   drawPlayers = () => {
@@ -573,140 +244,31 @@ class Update {
     this.stick2.x = this.player2Pos[0];
     this.stick2.y = this.player2Pos[1];
 
-    if (this.stick1.x < this.stick2.x && player1.getLeft() == true) {
-      player1.flip();
+    if ((this.stick1.scale.x > 0 && this.player1Left) || (this.stick1.scale.x < 0 && !this.player1Left)) {
       this.stick1.scale.x *= -1;
     }
-    if (this.stick1.x >= this.stick2.x && player1.getLeft() == false) {
-      player1.flip();
-      this.stick1.scale.x *= -1;
-    }
-    if (this.stick2.x < this.stick1.x && player2.getLeft() == true) {
-      player2.flip();
-      this.stick2.scale.x *= -1;
-    }
-    if (this.stick2.x >= this.stick1.x && player2.getLeft() == false) {
-      player2.flip();
+    if ((this.stick2.scale.x > 0 && this.player2Left) || (this.stick2.scale.x < 0 && !this.player2Left)) {
       this.stick2.scale.x *= -1;
     }
 
     this.animate();
   };
 
-  drawHitBox = (x, y, width, height) => {
-    const hitBox = new Graphics();
-    hitBox.clear();
-    hitBox.x = x;
-    hitBox.y = y;
-    hitBox.beginFill(0x00ff00).drawRect(0, 0, width, height).endFill();
-    app.stage.addChild(hitBox);
-  };
-
-  // check for attack collision
-  checkAttackCollision = () => {
-    // check if first player is dealing damage
+  drawHitBoxes = () => {
+    this.hitBox1.clear();
+    this.hitBox2.clear();
+  
     if (this.attackCollisionPos1) {
-      //this.drawHitBox(this.attackCollisionPos1[0], this.attackCollisionPos1[1], this.attackCollisionPos1[2], this.attackCollisionPos1[3])
-      if (
-        this.attackCollisionPos1[5] &&
-        this.attackCollisionPos1[0] + this.attackCollisionPos1[2] >=
-          this.player2Pos[0] - 75 * scalex &&
-        this.attackCollisionPos1[0] <= this.player2Pos[0] + 75 * scalex &&
-        this.attackCollisionPos1[1] <= this.player2Pos[1] + 350 * scaley &&
-        this.attackCollisionPos1[1] + this.attackCollisionPos1[3] >= this.player2Pos[1]
-      ) {
-        console.log('1')
-        this.attackCollisionPos1[5] = false;
-        socket.emit("damage", [this.attackCollisionPos1[4], 1]);
-      }
-
-      if (
-        this.attackCollisionPos1[5] &&
-        this.attackCollisionPos1[0] >= this.player2Pos[0] - 75 * scalex &&
-        this.attackCollisionPos1[0] + this.attackCollisionPos1[2] <=
-          this.player2Pos[0] + 75 * scalex &&
-        this.attackCollisionPos1[1] <= this.player2Pos[1] + 350 * scaley &&
-        this.attackCollisionPos1[1] + this.attackCollisionPos1[3] >=
-          this.player2Pos[1]
-      ) {
-        console.log('2')
-        this.attackCollisionPos1[5] = false;
-        socket.emit("damage", [this.attackCollisionPos1[4], 1]);
-      }
+      this.hitBox1.x = this.attackCollisionPos1[0];
+      this.hitBox1.y = this.attackCollisionPos1[1];
+      this.hitBox1.beginFill(0x00ff00).drawRect(0, 0, this.attackCollisionPos1[2], this.attackCollisionPos1[3]).endFill();
     }
-
-    // check if second player is dealing damage
     if (this.attackCollisionPos2) {
-      //this.drawHitBox(this.attackCollisionPos2[0], this.attackCollisionPos2[1], this.attackCollisionPos2[2], this.attackCollisionPos2[3])
-      if (
-        this.attackCollisionPos2[5] &&
-        this.attackCollisionPos2[0] + this.attackCollisionPos2[2] >=
-          this.player1Pos[0] - 75 * scalex &&
-        this.attackCollisionPos2[0] <= this.player1Pos[0] + 75 * scalex &&
-        this.attackCollisionPos2[1] <= this.player1Pos[1] + 350 * scaley &&
-        this.attackCollisionPos2[1] + this.attackCollisionPos2[3] >=
-          this.player1Pos[1]
-      ) {
-        console.log('3')
-        this.attackCollisionPos2[5] = false;
-        socket.emit("damage", [this.attackCollisionPos2[4], 2]);
-      }
-      if (
-        this.attackCollisionPos2[5] &&
-        this.attackCollisionPos2[0] >= this.player1Pos[0] - 75 * scalex &&
-        this.attackCollisionPos2[0] + this.attackCollisionPos2[2] <=
-          this.player1Pos[0] + 75 * scalex &&
-        this.attackCollisionPos2[1] <= this.player1Pos[1] + 350 * scaley &&
-        this.attackCollisionPos2[1] + this.attackCollisionPos2[3] >=
-          this.player1Pos[1]
-      ) {
-        console.log('4')
-        this.attackCollisionPos2[5] = false;
-        socket.emit("damage", [this.attackCollisionPos2[4], 2]);
-      }
+      this.hitBox2.x = this.attackCollisionPos2[0];
+      this.hitBox2.y = this.attackCollisionPos2[1];
+      this.hitBox2.beginFill(0x00ff00).drawRect(0, 0, this.attackCollisionPos2[2], this.attackCollisionPos2[3]).endFill();
     }
   };
-
-  // check for player collision
-  checkPlayerCollision = () => {
-      let colliding = false;
-      if ( // collide with each other
-          this.player1Pos[0] + 90 * scalex >= this.player2Pos[0] - 90 * scalex &&
-          this.player1Pos[0] - 90 * scalex <= this.player2Pos[0] + 90 * scalex &&
-          this.player1Pos[1] <= this.player2Pos[1] + 225 * scaley &&
-          this.player1Pos[1] + 225 * scaley >= this.player2Pos[1]
-      ) {
-          if (!player1.getLeft() && player2.getLeft()) {
-              colliding = true;
-              socket.emit("collide", ['right', 1]);
-              socket.emit("collide", ['left', 2]);
-          } else if (player1.getLeft() && !player2.getLeft()) {
-              colliding = true;
-              socket.emit("collide", ['left', 1]);
-              socket.emit("collide", ['right', 2]);
-          }
-      }
-      
-      if (this.player2Pos[0] + 95 * scalex >= ground_width && player2.getLeft()) { // collide with wall
-          colliding = true;
-          socket.emit("collide", ['right', 2]);
-      } else if (this.player1Pos[0] + 95 * scalex >= ground_width && player1.getLeft()) { // collide with wall
-          colliding = true;
-          socket.emit("collide", ['right', 1]);
-      } else if (this.player2Pos[0] - 95 * scalex <= 0 && !player2.getLeft()) { // collide with wall
-          colliding = true;
-          socket.emit("collide", ['left', 2]);
-      } else if (this.player1Pos[0] - 95 * scalex <= 0 && !player1.getLeft()) { // collide with wall
-          colliding = true;
-          socket.emit("collide", ['left', 1]);
-      }
-      
-      
-      if (!colliding) {
-          socket.emit("collide", ['none', 1]);
-          socket.emit("collide", ['none', 2]);
-      }
-  }
 
   animate = () => {
     switch (this.animation1) {
@@ -789,10 +351,6 @@ class Update {
   };
 }
 
-const ground_width = window.innerWidth * scalex;
-const ground_height = window.innerHeight / 10 ;
-const player_height = window.innerHeight - ground_height - 350;
-
 // add ground to screen
 const ground = new Graphics();  
 ground
@@ -839,62 +397,31 @@ function ChromaFilter() {
 // initial connection with server
 socket = io();
 socket.on("player", (player) => {
-  if (player == 1) {
-    // add first player to screen
-    player1Pos = [window.innerWidth / 3, player_height];
-    player1 = new Player(player1Pos[0], player1Pos[1], socket.id, 1, false);
-    player2 = new Player(
-      (window.innerWidth * 2) / 3,
-      player_height,
-      socket.id,
-      2,
-      true
-    );
-    update = new Update();
-    socket.emit("confirm", [1, socket.id, player1Pos]);
-  } else if (player == 2 && !player2) {
-    // add second player to screen
-    player2Pos = [(window.innerWidth * 2) / 3, player_height];
-    player1 = new Player(
-      window.innerWidth / 3,
-      player_height,
-      socket.id,
-      1,
-      true
-    );
-    player2 = new Player(player2Pos[0], player2Pos[1], socket.id, 2, false);
-    update = new Update();
-    socket.emit("confirm", [2, socket.id, player2Pos]);
-  }
+  //player = player;
+  drawer = new Drawer();
+  socket.emit("confirm", player);
 });
 
 // done once a frame so 1/60 sec.
-socket.on("update", (data) => {
-  update.scale();
-  player1.update();
-  player2.update();
-  update.drawHealth();
-  update.drawPlayers();
-  update.checkAttackCollision();
-  update.checkPlayerCollision();
+socket.on("render", () => {
+  drawer.scale();
+  // drawer.drawHitBoxes();
+  drawer.drawHealth();
+  drawer.drawPlayers();
 });
 
-// predict movement
-socket.on("user-input", (userInput) => {
-  if (userInput["player"] == 1) {
-    player1.userInput(userInput);
-  } else if (userInput["player"] == 2) {
-    player2.userInput(userInput);
-  }
-});
+document.addEventListener("keydown", keyDown);
+document.addEventListener("keyup", keyUp);
+document.addEventListener("mousedown", click);
+document.addEventListener("mouseup", uClick);
+document.addEventListener("contextmenu", contextClick);
 
-socket.on("currMove", (data) => {
-  if (data[0] == 1) {
-    player1.setCurrMove(data[1]);
-  } else if (data[0] == 2) {
-    player2.setCurrMove(data[1]);
-  }
-})
+app.ticker.add((delta) => {
+  socket.emit("action", {
+    'keys': keys,
+    'delta': delta,
+  });
+});
 
 // resize
 window.addEventListener("resize", resize);
