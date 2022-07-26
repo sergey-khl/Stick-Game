@@ -28,10 +28,10 @@ let conn1;
 let conn2;
 
 io.sockets.on('connection', (socket) => {
-    // first connectiion
+    // first connection
     if (!conn1) {
         socket.emit('player', 1);
-    } else if (!conn2) {
+    } else if (!conn2) { // second connection
         socket.emit('player', 2);
     }
     
@@ -51,7 +51,6 @@ io.sockets.on('connection', (socket) => {
 
 // run game at 60 fps
 setInterval(() => {
-    //io.emit('update', () => {});
     if (conn1 && conn2 && game) {
         
         game.draw();

@@ -157,6 +157,7 @@ class Game {
       ) {
         this.player2.setHealth(this.player2.getHealth() - attackCollisionPos1[4])
         this.player1.setAttackCollision(null, null, null, null, null);
+        this.player2.setKnockback(5);
         this.socket1.emit("damage", [2, this.player2.getHealth()]);
         this.socket2.emit("damage", [2, this.player2.getHealth()]);
       } else if (
@@ -167,6 +168,7 @@ class Game {
       ) {
         this.player2.setHealth(this.player2.getHealth() - attackCollisionPos1[4])
         this.player1.setAttackCollision(null, null, null, null, null);
+        this.player2.setKnockback(5);
         this.socket1.emit("damage", [2, this.player2.getHealth()]);
         this.socket2.emit("damage", [2, this.player2.getHealth()]);
       } else {
@@ -184,6 +186,7 @@ class Game {
       ) {
         this.player1.setHealth(this.player1.getHealth() - attackCollisionPos2[4])
         this.player2.setAttackCollision(null, null, null, null, null);
+        this.player1.setKnockback(5);
         this.socket1.emit("damage", [1, this.player1.getHealth()]);
         this.socket2.emit("damage", [1, this.player1.getHealth()]);
       } else if (
@@ -194,6 +197,7 @@ class Game {
       ) {
         this.player1.setHealth(this.player1.getHealth() - attackCollisionPos2[4])
         this.player2.setAttackCollision(null, null, null, null, null);
+        this.player1.setKnockback(5);
         this.socket1.emit("damage", [1, this.player1.getHealth()]);
         this.socket2.emit("damage", [1, this.player1.getHealth()]);
       } else {
