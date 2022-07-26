@@ -10,10 +10,10 @@ document.body.appendChild(app.view);
 const Graphics = PIXI.Graphics;
 const Container = PIXI.Container;
 
-let keys = { 'last': '', 'w': false, 'a': false, 's': false, 'd': false, 'punch': false, 'kick': false };
+let keys = { 'last': '', 'w': false, 'a': false, 's': false, 'd': false, 'punch': false, 'kick': false, 'block': false };
 let drawer;
 
-// scale according to screen of developed on settings
+// scale according to screen of developed on dimensions
 let scalex = window.innerWidth / 2000
 let scaley = window.innerHeight / 1000;
 const ground_width = window.innerWidth;
@@ -25,10 +25,16 @@ const keyDown = (e) => {
   if (e.key == 'a' || e.key == 'd') {
     keys['last'] = e.key;
   }
+  if (e.key == ' ') {
+    keys['block'] = true;
+  }
 };
 
 const keyUp = (e) => {
   keys[e.key] = false;
+  if (e.key = ' ') {
+    keys['block'] = false;
+  }
 };
 
 const click = (e) => {
@@ -187,8 +193,16 @@ class Drawer {
     }
     //crouch
     this.crouch_textures = []; // 1.0
-    const texture = PIXI.Texture.from(`src/crouch/crouch_0000.png`);
-    this.crouch_textures.push(texture);
+    const texture_crouch = PIXI.Texture.from(`src/crouch/crouch_0000.png`);
+    this.crouch_textures.push(texture_crouch);
+    //block standing
+    this.block_s_textures = []; // 1.0
+    const texture_block_s = PIXI.Texture.from(`src/block_s/block_s_0000.png`);
+    this.block_s_textures.push(texture_block_s);
+    //block crouching
+    this.block_c_textures = []; // 1.0
+    const texture_block_c = PIXI.Texture.from(`src/block_c/block_c_0000.png`);
+    this.block_c_textures.push(texture_block_c);
     //punch
     this.punch_textures = [];
     for (let i = 0; i <= 9; i++) {
@@ -300,6 +314,20 @@ class Drawer {
           this.stick1.animationSpeed = 1.0;
         }
         break;
+      case "block_s":
+        if (this.curranimation1 != this.animation1) {
+          this.curranimation1 = this.animation1;
+          this.stick1.textures = this.block_s_textures;
+          this.stick1.animationSpeed = 1.0;
+        }
+        break;
+      case "block_c":
+        if (this.curranimation1 != this.animation1) {
+          this.curranimation1 = this.animation1;
+          this.stick1.textures = this.block_c_textures;
+          this.stick1.animationSpeed = 1.0;
+        }
+        break;
       case "punch":
         if (this.curranimation1 != this.animation1) {
           this.curranimation1 = this.animation1;
@@ -336,6 +364,20 @@ class Drawer {
         if (this.curranimation2 != this.animation2) {
           this.curranimation2 = this.animation2;
           this.stick2.textures = this.crouch_textures;
+          this.stick2.animationSpeed = 1.0;
+        }
+        break;
+      case "block_s":
+        if (this.curranimation2 != this.animation2) {
+          this.curranimation2 = this.animation2;
+          this.stick2.textures = this.block_s_textures;
+          this.stick2.animationSpeed = 1.0;
+        }
+        break;
+      case "block_c":
+        if (this.curranimation2 != this.animation2) {
+          this.curranimation2 = this.animation2;
+          this.stick2.textures = this.block_c_textures;
           this.stick2.animationSpeed = 1.0;
         }
         break;

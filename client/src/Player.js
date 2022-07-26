@@ -83,6 +83,8 @@ class Player {
 
       // basic movement
       if (!this.attacking) {
+        
+        this.crouching = false;
         if (this.keys['d'] && this.keys['last'] == 'd') {
           this.animation = 'walk';
           this.velocity[0] = 10;
@@ -95,12 +97,27 @@ class Player {
         }
     
         if (!this.keys['a'] && !this.keys['d'] && !this.jumping && this.keys['s']) {
+          this.crouching = true;
           this.animation = 'crouch';
         }
+
+        if (!this.keys['block']) {
+          // this.animation = 'idle';
+          this.blocking = false;
+        } else if (this.keys['block'] && !this.jumping) {
+          if (this.crouching) {
+            this.animation = 'block_c';
+          } else {
+            this.animation = 'block_s';
+          }
+          this.blocking = true;
+        }
+
     
         if (this.keys['w'] && !this.jumping) {
           this.animation = 'jump';
           this.jumping = true;
+          this.crouching = false;
           this.velocity[1] = -50;
           this.acceleration[1] = 2.5;
         }
@@ -144,6 +161,10 @@ class Player {
   getInfo = () => {
     return [this.position[0], this.position[1], this.animation, this.left];
   };
+
+  isBlocking = () => {
+    return this.blocking;
+  }
 
   setAttackCollision = (x, y, width, height, damage) => {
     if (x && y && width && height && damage) {
