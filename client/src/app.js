@@ -213,6 +213,16 @@ class Drawer {
       const texture = PIXI.Texture.from(`src/punch/punch_00${i}.png`);
       this.punch_textures.push(texture);
     }
+    //kick
+    this.kick_textures = [];
+    for (let i = 0; i <= 9; i++) {
+      const texture = PIXI.Texture.from(`src/kick/kick_000${i}.png`);
+      this.kick_textures.push(texture);
+    }
+    for (let i = 10; i <= 11; i++) {
+      const texture = PIXI.Texture.from(`src/kick/kick_00${i}.png`);
+      this.kick_textures.push(texture);
+    }
   }
 
   // adjust for screen size 
@@ -335,6 +345,13 @@ class Drawer {
         }
         this.stick1.animationSpeed = 11 / (60 * 0.5);
         break;
+      case "kick":
+        if (this.curranimation1 != this.animation1) {
+          this.curranimation1 = this.animation1;
+          this.stick1.textures = this.kick_textures;
+        }
+        this.stick1.animationSpeed = 12 / (60 * 0.6);
+        break;
     }
     this.stick1.play();
 
@@ -388,6 +405,13 @@ class Drawer {
         }
         this.stick2.animationSpeed = 11 / (60 * 0.5);
         break;
+      case "kick":
+          if (this.curranimation2 != this.animation2) {
+            this.curranimation2 = this.animation2;
+            this.stick2.textures = this.kick_textures;
+          }
+          this.stick2.animationSpeed = 12 / (60 * 0.6);
+          break;
     }
     this.stick2.play();
   };
@@ -439,7 +463,6 @@ function ChromaFilter() {
 // initial connection with server
 socket = io();
 socket.on("player", (player) => {
-  //player = player;
   drawer = new Drawer();
   socket.emit("confirm", player);
 });

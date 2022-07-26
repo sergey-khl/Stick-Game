@@ -174,7 +174,11 @@ class Game {
         this.socket1.emit("damage", [2, this.player2.getHealth()]);
         this.socket2.emit("damage", [2, this.player2.getHealth()]);
       } else {
-        this.player1.setAttackCollision(player1Pos[0], player1Pos[1], attackCollisionPos1[2], attackCollisionPos1[3], attackCollisionPos1[4]);
+        if (this.player1.animation == 'punch') {
+          this.player1.setAttackCollision(player1Pos[0], player1Pos[1] + 100, attackCollisionPos1[2], attackCollisionPos1[3], attackCollisionPos1[4]);
+        } else if (this.player1.animation == 'kick') {
+          this.player1.setAttackCollision(player1Pos[0], player1Pos[1] + 250, attackCollisionPos1[2], attackCollisionPos1[3], attackCollisionPos1[4]);
+        }
       }
     }
 
@@ -205,7 +209,11 @@ class Game {
         this.socket1.emit("damage", [1, this.player1.getHealth()]);
         this.socket2.emit("damage", [1, this.player1.getHealth()]);
       } else {
-        this.player2.setAttackCollision(player2Pos[0], player2Pos[1], attackCollisionPos2[2], attackCollisionPos2[3], attackCollisionPos2[4]);
+        if (this.player2.animation == 'punch') {
+          this.player2.setAttackCollision(player2Pos[0], player2Pos[1] + 100, attackCollisionPos2[2], attackCollisionPos2[3], attackCollisionPos2[4]);
+        } else if (this.player2.animation == 'kick') {
+          this.player2.setAttackCollision(player2Pos[0], player2Pos[1] + 250, attackCollisionPos2[2], attackCollisionPos2[3], attackCollisionPos2[4]);
+        }
       }
     }
   };

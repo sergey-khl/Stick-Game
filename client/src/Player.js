@@ -44,23 +44,13 @@ class Player {
             
           } else if (this.frame_count == 8) {
             this.velocity[0] = this.left ? -10 : 10;
-            if (this.left) {
-              this.setAttackCollision(
-                this.position[0],
-                this.position[1] + 100,
-                -150,
-                70,
-                5
-              );
-            } else {
-              this.setAttackCollision(
-                this.position[0],
-                this.position[1] + 100,
-                150,
-                70,
-                5
-              );
-            }
+            this.setAttackCollision(
+              this.position[0],
+              this.position[1] + 100,
+              (this.left ? -150 : 150),
+              70,
+              5
+            );
           } else if (this.frame_count == 17) {
             this.velocity[0] = this.left ? -5 : 5;
             this.setAttackCollision(null, null, null, null, null);
@@ -69,14 +59,35 @@ class Player {
             this.velocity[0] = 0;
             this.attacking = false;
           }
+        } else if (this.animation == 'kick') {
+          if (this.frame_count == 0) {
+            this.velocity[0] = this.left ? -10 : 10;
+            
+          } else if (this.frame_count == 15) {
+            this.velocity[0] = this.left ? -5 : 5;
+            this.setAttackCollision(
+              this.position[0],
+              this.position[1] + 250,
+              (this.left ? -300 : 300),
+              70,
+              8
+            );
+          } else if (this.frame_count == 30) {
+            this.velocity[0] = this.left ? -5 : 5;
+            this.setAttackCollision(null, null, null, null, null);
+          } else if (this.frame_count >= 35) {
+            this.frame_count = 0;
+            this.velocity[0] = 0;
+            this.attacking = false;
+          }
         }
       }
       
       // start an attack
-      if (this.keys['punch'] && this.attacking == false && !this.jumping) {
+      if (this.keys['punch'] && !this.attacking && !this.jumping) {
         this.attacking = true;
         this.animation = 'punch';
-      } else if (this.keys['kick'] && !this.attacking) {
+      } else if (this.keys['kick'] && !this.attacking && !this.jumping) {
         this.attacking = true;
         this.animation = 'kick';
       }
