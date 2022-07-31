@@ -42,8 +42,8 @@ class Game {
   updateMovement = () => {
     // check collisions and stuff
     this.checkLeft();
-    this.checkAttackCollision();
     this.checkPlayerCollision();
+    this.checkAttackCollision();
     this.player1.updateMovement();
     this.player2.updateMovement();
     this.socket1.emit("new-info", {
@@ -144,75 +144,67 @@ class Game {
   checkAttackCollision = () => {
     const player1Pos = this.player1.getInfo();
     const player2Pos = this.player2.getInfo();
-    let attackCollisionPos1 = this.player1.getAttackCollision();
-    let attackCollisionPos2 = this.player2.getAttackCollision();
+    let attackCollisionPos1 = this.player1.getAttackCollision() ? this.player1.getAttackCollision() : [];
+    let attackCollisionPos2 = this.player2.getAttackCollision() ? this.player2.getAttackCollision() : [];
 
-    // check if first player is dealing damage
-    if (attackCollisionPos1) {
-      const knockback = this.player2.isBlocking() ? 2 : 5;
-      const damage = this.player2.isBlocking() ? 2 : 5;
-      if (
-        attackCollisionPos1[0] + attackCollisionPos1[2] >= player2Pos[0] - 75  &&
-        attackCollisionPos1[0] <= player2Pos[0] + 75 &&
-        attackCollisionPos1[1] <= player2Pos[1] + 400  &&
-        attackCollisionPos1[1] + attackCollisionPos1[3] >= player2Pos[1]
-      ) {
-        this.player2.setHealth(this.player2.getHealth() - damage)
-        this.player1.setAttackCollision(null, null, null, null, null);
-        this.player2.setKnockback(knockback);
-        this.socket1.emit("damage", [2, this.player2.getHealth()]);
-        this.socket2.emit("damage", [2, this.player2.getHealth()]);
-      } else if (
-        attackCollisionPos1[0] >= player2Pos[0] - 75 &&
-        attackCollisionPos1[0] + attackCollisionPos1[2] <= player2Pos[0] + 75 &&
-        attackCollisionPos1[1] <= player2Pos[1] + 400 &&
-        attackCollisionPos1[1] + attackCollisionPos1[3] >= player2Pos[1]
-      ) {
-        this.player2.setHealth(this.player2.getHealth() - damage)
-        this.player1.setAttackCollision(null, null, null, null, null);
-        this.player2.setKnockback(knockback);
-        this.socket1.emit("damage", [2, this.player2.getHealth()]);
-        this.socket2.emit("damage", [2, this.player2.getHealth()]);
-      } else {
-        if (this.player1.animation == 'punch') {
-          this.player1.setAttackCollision(player1Pos[0], player1Pos[1] + 100, attackCollisionPos1[2], attackCollisionPos1[3], attackCollisionPos1[4]);
-        } else if (this.player1.animation == 'kick') {
-          this.player1.setAttackCollision(player1Pos[0], player1Pos[1] + 250, attackCollisionPos1[2], attackCollisionPos1[3], attackCollisionPos1[4]);
+    for (let i = 0; i < attackCollisionPos1.length; i++) {
+      // check if first player is dealing damage
+      if (attackCollisionPos1[i]) {
+        const knockback = this.player2.isBlocking() ? 2 : 5;
+        const damage = this.player2.isBlocking() ? attackCollisionPos1[i][4] / 2 : attackCollisionPos1[i][4];
+        if (
+          attackCollisionPos1[i][0] + attackCollisionPos1[i][2] >= player2Pos[0] - 75  &&
+          attackCollisionPos1[i][0] <= player2Pos[0] + 75 &&
+          attackCollisionPos1[i][1] <= player2Pos[1] + 400  &&
+          attackCollisionPos1[i][1] + attackCollisionPos1[i][3] >= player2Pos[1]
+        ) {
+          this.player2.setHealth(this.player2.getHealth() - damage)
+          this.player1.removeAttackCollision(attackCollisionPos1[i][5]);
+          this.player2.setKnockback(knockback);
+          this.socket1.emit("damage", [2, this.player2.getHealth()]);
+          this.socket2.emit("damage", [2, this.player2.getHealth()]);
+        } else if (
+          attackCollisionPos1[i][0] >= player2Pos[0] - 75 &&
+          attackCollisionPos1[i][0] + attackCollisionPos1[i][2] <= player2Pos[0] + 75 &&
+          attackCollisionPos1[i][1] <= player2Pos[1] + 400 &&
+          attackCollisionPos1[i][1] + attackCollisionPos1[i][3] >= player2Pos[1]
+        ) {
+          this.player2.setHealth(this.player2.getHealth() - damage)
+          this.player1.removeAttackCollision(attackCollisionPos1[i][5]);
+          this.player2.setKnockback(knockback);
+          this.socket1.emit("damage", [2, this.player2.getHealth()]);
+          this.socket2.emit("damage", [2, this.player2.getHealth()]);
         }
       }
     }
 
-    // check if second player is dealing damage
-    if (attackCollisionPos2) {
-      const knockback = this.player1.isBlocking() ? 2 : 5;
-      const damage = this.player1.isBlocking() ? 2 : 5;
-      if (
-        attackCollisionPos2[0] + attackCollisionPos2[2] >= player1Pos[0] - 75 &&
-        attackCollisionPos2[0] <= player1Pos[0] + 75 &&
-        attackCollisionPos2[1] <= player1Pos[1] + 400 &&
-        attackCollisionPos2[1] + attackCollisionPos2[3] >= player1Pos[1]
-      ) {
-        this.player1.setHealth(this.player1.getHealth() - damage)
-        this.player2.setAttackCollision(null, null, null, null, null);
-        this.player1.setKnockback(knockback);
-        this.socket1.emit("damage", [1, this.player1.getHealth()]);
-        this.socket2.emit("damage", [1, this.player1.getHealth()]);
-      } else if (
-        attackCollisionPos2[0] >= player1Pos[0] - 75 &&
-        attackCollisionPos2[0] + attackCollisionPos2[2] <= player1Pos[0] + 75 &&
-        attackCollisionPos2[1] <= player1Pos[1] + 400 &&
-        attackCollisionPos2[1] + attackCollisionPos2[3] >= player1Pos[1]
-      ) {
-        this.player1.setHealth(this.player1.getHealth() - damage)
-        this.player2.setAttackCollision(null, null, null, null, null);
-        this.player1.setKnockback(knockback);
-        this.socket1.emit("damage", [1, this.player1.getHealth()]);
-        this.socket2.emit("damage", [1, this.player1.getHealth()]);
-      } else {
-        if (this.player2.animation == 'punch') {
-          this.player2.setAttackCollision(player2Pos[0], player2Pos[1] + 100, attackCollisionPos2[2], attackCollisionPos2[3], attackCollisionPos2[4]);
-        } else if (this.player2.animation == 'kick') {
-          this.player2.setAttackCollision(player2Pos[0], player2Pos[1] + 250, attackCollisionPos2[2], attackCollisionPos2[3], attackCollisionPos2[4]);
+    for (let i = 0; i < attackCollisionPos2.length; i++) {
+      // check if second player is dealing damage
+      if (attackCollisionPos2[i]) {
+        const knockback = this.player1.isBlocking() ? 2 : 5;
+        const damage = this.player1.isBlocking() ? attackCollisionPos2[i][4] / 2 : attackCollisionPos2[i][4];
+        if (
+          attackCollisionPos2[i][0] + attackCollisionPos2[i][2] >= player1Pos[0] - 75 &&
+          attackCollisionPos2[i][0] <= player1Pos[0] + 75 &&
+          attackCollisionPos2[i][1] <= player1Pos[1] + 400 &&
+          attackCollisionPos2[i][1] + attackCollisionPos2[i][3] >= player1Pos[1]
+        ) {
+          this.player1.setHealth(this.player1.getHealth() - damage)
+          this.player2.removeAttackCollision(attackCollisionPos2[i][5]);
+          this.player1.setKnockback(knockback);
+          this.socket1.emit("damage", [1, this.player1.getHealth()]);
+          this.socket2.emit("damage", [1, this.player1.getHealth()]);
+        } else if (
+          attackCollisionPos2[i][0] >= player1Pos[0] - 75 &&
+          attackCollisionPos2[i][0] + attackCollisionPos2[i][2] <= player1Pos[0] + 75 &&
+          attackCollisionPos2[i][1] <= player1Pos[1] + 400 &&
+          attackCollisionPos2[i][1] + attackCollisionPos2[i][3] >= player1Pos[1]
+        ) {
+          this.player1.setHealth(this.player1.getHealth() - damage)
+          this.player2.removeAttackCollision(attackCollisionPos2[i][5]);
+          this.player1.setKnockback(knockback);
+          this.socket1.emit("damage", [1, this.player1.getHealth()]);
+          this.socket2.emit("damage", [1, this.player1.getHealth()]);
         }
       }
     }

@@ -22,10 +22,29 @@ class Player {
     this.collidingRight = false;
     this.knockback = 0;
 
-    this.attackCollisionPos = null;
+    this.attackCollisionPos = [];
   }
 
   updateMovement = () => {
+    // move any projectiles and attacks first
+    let newAttackCollisionPos = [];
+    
+    if (this.attackCollisionPos) {
+      for (let i = 0; i < this.attackCollisionPos.length; i++) {
+        if (this.attackCollisionPos[i]) {
+          if (this.attackCollisionPos[i][5] == 'punch') {
+            newAttackCollisionPos.push([this.position[0], this.position[1] + 100, this.attackCollisionPos[i][2], this.attackCollisionPos[i][3], this.attackCollisionPos[i][4], this.attackCollisionPos[i][5]]);
+          } else if (this.attackCollisionPos[i][5] == 'kick') {
+            newAttackCollisionPos.push([this.position[0], this.position[1] + 250, this.attackCollisionPos[i][2], this.attackCollisionPos[i][3], this.attackCollisionPos[i][4], this.attackCollisionPos[i][5]]);
+          } else if (this.attackCollisionPos[i][5] == 'throw_shurikens') {
+            newAttackCollisionPos.push([this.attackCollisionPos[i][0] + (this.left ? -15 : 15), this.attackCollisionPos[i][1], this.attackCollisionPos[i][2], this.attackCollisionPos[i][3], this.attackCollisionPos[i][4], this.attackCollisionPos[i][5]]);
+          }
+        }
+      } 
+      this.setAttackCollision(newAttackCollisionPos);
+    }
+    
+
     if (Math.abs(this.knockback) > 0) { // we are being knocked back
       this.frame_count += 1;
       if (this.frame_count <= 21) {
@@ -39,43 +58,54 @@ class Player {
       if (this.attacking) {
         this.frame_count += 1;
         if (this.animation == 'punch') {
-          if (this.frame_count == 0) {
-            this.velocity[0] = this.left ? -5 : 5;
-            
-          } else if (this.frame_count == 8) {
+          if (this.frame_count == 8) {
             this.velocity[0] = this.left ? -10 : 10;
-            this.setAttackCollision(
+            this.addAttackCollision(
               this.position[0],
               this.position[1] + 100,
               (this.left ? -150 : 150),
               70,
-              5
+              5,
+              'punch'
             );
           } else if (this.frame_count == 17) {
             this.velocity[0] = this.left ? -5 : 5;
-            this.setAttackCollision(null, null, null, null, null);
+            this.removeAttackCollision('punch');
           } else if (this.frame_count >= 29) {
             this.frame_count = 0;
             this.velocity[0] = 0;
             this.attacking = false;
           }
         } else if (this.animation == 'kick') {
-          if (this.frame_count == 0) {
-            this.velocity[0] = this.left ? -10 : 10;
-            
-          } else if (this.frame_count == 15) {
-            this.velocity[0] = this.left ? -5 : 5;
-            this.setAttackCollision(
+          if (this.frame_count == 15) {
+            this.velocity[0] = this.left ? -2 : 2;
+            this.addAttackCollision(
               this.position[0],
               this.position[1] + 250,
               (this.left ? -300 : 300),
               70,
-              8
+              8,
+              'kick'
             );
           } else if (this.frame_count == 30) {
-            this.velocity[0] = this.left ? -5 : 5;
-            this.setAttackCollision(null, null, null, null, null);
+            this.velocity[0] = this.left ? -10 : 10;
+            this.removeAttackCollision(null, null, null, null, null, null);
           } else if (this.frame_count >= 35) {
+            this.frame_count = 0;
+            this.velocity[0] = 0;
+            this.attacking = false;
+          }
+        } else if (this.animation == 'throw_shurikens') {
+          if (this.frame_count == 14) {
+            this.addAttackCollision(
+              this.position[0] + (this.left ? -95 : 95),
+              this.position[1] + 250,
+              (this.left ? -50 : 50),
+              50,
+              5,
+              'throw_shurikens'
+            );
+          } else if (this.frame_count >= 23) {
             this.frame_count = 0;
             this.velocity[0] = 0;
             this.attacking = false;
@@ -83,13 +113,18 @@ class Player {
         }
       }
       
-      // start an attack
-      if (this.keys['punch'] && !this.attacking && !this.jumping) {
+      // start an attack, start init speed here
+      if (this.keys['punch'] && !this.attacking && !this.jumping && !this.crouching) {
         this.attacking = true;
         this.animation = 'punch';
-      } else if (this.keys['kick'] && !this.attacking && !this.jumping) {
+        this.velocity[0] = this.left ? -5 : 5;
+      } else if (this.keys['kick'] && !this.attacking && !this.jumping && !this.crouching) {
         this.attacking = true;
         this.animation = 'kick';
+        this.velocity[0] = this.left ? -10 : 10;
+      } else if (this.keys['throw'] && !this.attacking && !this.jumping && !this.crouching) {
+        this.attacking = true;
+        this.animation = 'throw_shurikens';
       }
 
       // basic movement
@@ -161,9 +196,28 @@ class Player {
     this.velocity[1] += this.acceleration[1] * this.delta;
   }
   
+  addAttackCollision = (x, y, width, height, damage, attack) => {
+    if (x && y && width && height && damage && attack) {
+      this.attackCollisionPos.push([x, y, width, height, damage, attack]);
+    }
+  }
+
+  // deleteProjectileCollision = () => {
+  //   this.projectileCollisionPos = [];
+  // }
+
+  removeAttackCollision = (attack) => {
+    const index = this.attackCollisionPos.indexOf(attack);
+    this.attackCollisionPos.splice(index, 1);
+  }
+
   getAttackCollision = () => {
     return this.attackCollisionPos;
   }
+
+  // getProjectileCollision = () => {
+  //   return this.projectileCollisionPos;
+  // }
 
   getHealth = () => {
     return this.health;
@@ -177,13 +231,18 @@ class Player {
     return this.blocking;
   }
 
-  setAttackCollision = (x, y, width, height, damage) => {
-    if (x && y && width && height && damage) {
-      this.attackCollisionPos = [x, y, width, height, damage];
-    } else {
-      this.attackCollisionPos = null;
-    }
+  // addAttackCollision = (x, y, width, height, damage, attack) => {
+  //   if (x && y && width && height && damage && attack) {
+  //     this.attackCollisionPos = [x, y, width, height, damage, attack];
+  //   } else {
+  //     this.attackCollisionPos = null;
+  //   }
+  // };
+
+  setAttackCollision = (attackCollision) => {
+    this.attackCollisionPos = attackCollision;
   };
+
 
   // indicate where the player is touching another
   setCollide = (collision) => {

@@ -10,7 +10,7 @@ document.body.appendChild(app.view);
 const Graphics = PIXI.Graphics;
 const Container = PIXI.Container;
 
-let keys = { 'last': '', 'w': false, 'a': false, 's': false, 'd': false, 'punch': false, 'kick': false, 'block': false };
+let keys = { 'last': '', 'w': false, 'a': false, 's': false, 'd': false, 'punch': false, 'kick': false, 'block': false, 'throw': false };
 let drawer;
 
 // scale according to screen of developed on dimensions
@@ -27,13 +27,17 @@ const keyDown = (e) => {
   }
   if (e.key == ' ') {
     keys['block'] = true;
+  } else if (e.key == 'q') {
+    keys['throw'] = true;
   }
 };
 
 const keyUp = (e) => {
   keys[e.key] = false;
-  if (e.key = ' ') {
+  if (e.key == ' ') {
     keys['block'] = false;
+  } else if (e.key == 'q') {
+    keys['throw'] = false;
   }
 };
 
@@ -121,10 +125,14 @@ class Drawer {
     this.curranimation1 = "none";
     this.animation2 = "idle";
     this.curranimation2 = "none";
-    this.attackCollisionPos1 = null;
-    this.attackCollisionPos2 = null;
+    this.attackCollisionPos1 = [];
+    this.attackCollisionPos2 = [];
     this.hitBox1 = new Graphics();
     this.hitBox2 = new Graphics();
+    this.proj1 = new Graphics();
+    this.proj2 = new Graphics();
+    app.stage.addChild(this.proj1);
+    app.stage.addChild(this.proj2);
     app.stage.addChild(this.hitBox1);
     app.stage.addChild(this.hitBox2);
 
@@ -223,6 +231,16 @@ class Drawer {
       const texture = PIXI.Texture.from(`src/kick/kick_00${i}.png`);
       this.kick_textures.push(texture);
     }
+    // throw_shurikens
+    this.throw_shurikens_textures = [];
+    for (let i = 0; i <= 9; i++) {
+      const texture = PIXI.Texture.from(`src/throw_shurikens/throw_shurikens_000${i}.png`);
+      this.throw_shurikens_textures.push(texture);
+    }
+    for (let i = 10; i <= 11; i++) {
+      const texture = PIXI.Texture.from(`src/throw_shurikens/throw_shurikens_00${i}.png`);
+      this.throw_shurikens_textures.push(texture);
+    }
   }
 
   // adjust for screen size 
@@ -231,17 +249,21 @@ class Drawer {
     this.player1Pos[1] *= scaley;
     this.player2Pos[0] *= scalex;
     this.player2Pos[1] *= scaley;
-    if (this.attackCollisionPos1 && this.attackCollisionPos1[0] && this.attackCollisionPos1[1] && this.attackCollisionPos1[2] && this.attackCollisionPos1[3]) {
-      this.attackCollisionPos1[0] *= scalex;
-      this.attackCollisionPos1[1] *= scaley;
-      this.attackCollisionPos1[2] *= scalex;
-      this.attackCollisionPos1[3] *= scaley;
+    if (this.attackCollisionPos1) {
+      for (let i = 0; i < this.attackCollisionPos1.length; i++) {
+        this.attackCollisionPos1[i][0] *= scalex;
+        this.attackCollisionPos1[i][1] *= scaley;
+        this.attackCollisionPos1[i][2] *= scalex;
+        this.attackCollisionPos1[i][3] *= scaley;
+      }
     }
-    if (this.attackCollisionPos2 && this.attackCollisionPos2[0] && this.attackCollisionPos2[1] && this.attackCollisionPos2[2] && this.attackCollisionPos2[3]) {
-      this.attackCollisionPos2[0] *= scalex;
-      this.attackCollisionPos2[1] *= scaley;
-      this.attackCollisionPos2[2] *= scalex;
-      this.attackCollisionPos2[3] *= scaley;
+    if (this.attackCollisionPos2) {
+      for (let i = 0; i < this.attackCollisionPos2.length; i++) {
+        this.attackCollisionPos2[i][0] *= scalex;
+        this.attackCollisionPos2[i][1] *= scaley;
+        this.attackCollisionPos2[i][2] *= scalex;
+        this.attackCollisionPos2[i][3] *= scaley;
+      }
     }
   }
 
@@ -281,16 +303,22 @@ class Drawer {
   drawHitBoxes = () => {
     this.hitBox1.clear();
     this.hitBox2.clear();
-  
+    this.proj1.clear();
+    this.proj2.clear();
+    
     if (this.attackCollisionPos1) {
-      this.hitBox1.x = this.attackCollisionPos1[0];
-      this.hitBox1.y = this.attackCollisionPos1[1];
-      this.hitBox1.beginFill(0x00ff00).drawRect(0, 0, this.attackCollisionPos1[2], this.attackCollisionPos1[3]).endFill();
+      for (let i = 0; i < this.attackCollisionPos1.length; i++) {
+        this.hitBox1.x = this.attackCollisionPos1[i][0];
+        this.hitBox1.y = this.attackCollisionPos1[i][1];
+        this.hitBox1.beginFill(0x00ff00).drawRect(0, 0, this.attackCollisionPos1[i][2], this.attackCollisionPos1[i][3]).endFill();
+      }
     }
     if (this.attackCollisionPos2) {
-      this.hitBox2.x = this.attackCollisionPos2[0];
-      this.hitBox2.y = this.attackCollisionPos2[1];
-      this.hitBox2.beginFill(0x00ff00).drawRect(0, 0, this.attackCollisionPos2[2], this.attackCollisionPos2[3]).endFill();
+      for (let i = 0; i < this.attackCollisionPos2.length; i++) {
+        this.hitBox2.x = this.attackCollisionPos2[i][0];
+        this.hitBox2.y = this.attackCollisionPos2[i][1];
+        this.hitBox2.beginFill(0x00ff00).drawRect(0, 0, this.attackCollisionPos2[i][2], this.attackCollisionPos2[i][3]).endFill();
+      }
     }
   };
 
@@ -352,6 +380,13 @@ class Drawer {
         }
         this.stick1.animationSpeed = 12 / (60 * 0.6);
         break;
+      case "throw_shurikens":
+          if (this.curranimation1 != this.animation1) {
+            this.curranimation1 = this.animation1;
+            this.stick1.textures = this.throw_shurikens_textures;
+          }
+          this.stick1.animationSpeed = 12 / (60 * 0.4);
+          break;
     }
     this.stick1.play();
 
@@ -412,6 +447,13 @@ class Drawer {
           }
           this.stick2.animationSpeed = 12 / (60 * 0.6);
           break;
+        case "throw_shurikens":
+            if (this.curranimation2 != this.animation2) {
+              this.curranimation2 = this.animation2;
+              this.stick2.textures = this.throw_shurikens_textures;
+            }
+            this.stick2.animationSpeed = 12 / (60 * 0.4);
+            break;
     }
     this.stick2.play();
   };
@@ -470,7 +512,7 @@ socket.on("player", (player) => {
 // done once a frame so 1/60 sec.
 socket.on("render", () => {
   drawer.scale();
-  // drawer.drawHitBoxes();
+  drawer.drawHitBoxes();
   drawer.drawHealth();
   drawer.drawPlayers();
 });
