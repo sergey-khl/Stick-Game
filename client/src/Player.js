@@ -1,3 +1,5 @@
+import { Socket } from "socket.io";
+
 class Player {
   constructor(initx, inity) {
     this.health = 100;
@@ -20,7 +22,7 @@ class Player {
     this.hitting = false;
     this.collidingLeft = false;
     this.collidingRight = false;
-    this.knockback = 0;
+    this.knockback = '';
 
     this.attackCollisionPos = [];
   }
@@ -47,13 +49,40 @@ class Player {
     }
     
 
-    if (Math.abs(this.knockback) > 0) { // we are being knocked back
+    if (this.knockback != '') { // we are being knocked back
       this.frame_count += 1;
-      if (this.frame_count <= 21) {
-        this.velocity[0] = this.left ? this.knockback : -this.knockback;
-      } else {
-        this.velocity[0] = 0;
-        this.setKnockback(0);
+      if (this.knockback == 'punch') {
+        if (this.frame_count <= 21) {
+          this.velocity[0] = this.left ? 4 : -4;
+        } else {
+          this.velocity[0] = 0;
+          this.frame_count = 0;
+          this.setKnockback('', false);
+        }
+      } else if (this.knockback == 'kick') {
+        if (this.frame_count <= 24) {
+          this.velocity[0] = this.left ? 5 : -5;
+        } else {
+          this.velocity[0] = 0;
+          this.frame_count = 0;
+          this.setKnockback('', false);
+        }
+      } else if (this.knockback == 'throw_shurikens') {
+        if (this.frame_count <= 12) {
+          this.velocity[0] = this.left ? 2 : -2;
+        } else {
+          this.velocity[0] = 0;
+          this.frame_count = 0;
+          this.setKnockback('', false);
+        }
+      } else if (this.knockback == 'sweep') {
+        if (this.frame_count == 1) {
+          this.velocity[0] = 0;
+          this.animation = 'stun_fall';
+        } else if (this.frame_count >= 31) {
+          this.frame_count = 0;
+          this.setKnockback('', false);
+        }
       }
     } else {
       // go frame by frame through an attack
@@ -177,7 +206,6 @@ class Player {
         }
 
         if (!this.keys['block']) {
-          // this.animation = 'idle';
           this.blocking = false;
         } else if (this.keys['block'] && !this.jumping) {
           if (this.crouching) {
@@ -194,20 +222,20 @@ class Player {
           this.jumping = true;
           this.crouching = false;
           this.velocity[1] = -50;
-          this.acceleration[1] = 2.5;
+        }
+
+        // jumping
+        if (this.jumping) {
+          this.animation = 'jump';
         }
       }
     }
-    // jumping
-    if (this.jumping) {
-      this.animation = 'jump';
-      // end jump
-      if (this.position[1] > this.standing_height) {
-        this.acceleration = [0, 0];
-        this.velocity[1] = 0;
-        this.jumping = false;
-        this.position[1] = this.standing_height;
-      }
+    if (this.position[1] <= this.standing_height) {
+      this.acceleration[1] = 2.5;
+    } else {
+      this.acceleration[1] = 0;
+      this.jumping = false;
+      this.position[1] = this.standing_height;
     }
 
     // deny movement if collision
@@ -231,10 +259,6 @@ class Player {
     }
   }
 
-  // deleteProjectileCollision = () => {
-  //   this.projectileCollisionPos = [];
-  // }
-
   removeAttackCollision = (attack) => {
     const index = this.attackCollisionPos.indexOf(attack);
     this.attackCollisionPos.splice(index, 1);
@@ -243,10 +267,6 @@ class Player {
   getAttackCollision = () => {
     return this.attackCollisionPos;
   }
-
-  // getProjectileCollision = () => {
-  //   return this.projectileCollisionPos;
-  // }
 
   getHealth = () => {
     return this.health;
@@ -259,14 +279,6 @@ class Player {
   isBlocking = () => {
     return this.blocking;
   }
-
-  // addAttackCollision = (x, y, width, height, damage, attack) => {
-  //   if (x && y && width && height && damage && attack) {
-  //     this.attackCollisionPos = [x, y, width, height, damage, attack];
-  //   } else {
-  //     this.attackCollisionPos = null;
-  //   }
-  // };
 
   setAttackCollision = (attackCollision) => {
     this.attackCollisionPos = attackCollision;
@@ -297,11 +309,11 @@ class Player {
     this.health = health;
   };
 
-  setKnockback = (power) => {
-    if (power > 0) {
+  setKnockback = (knock_attack, is_new) => {
+    if (is_new) {
       this.frame_count = 0;
     }
-    this.knockback = power;
+    this.knockback = knock_attack;
   }
 
   setLeft = (left) => {

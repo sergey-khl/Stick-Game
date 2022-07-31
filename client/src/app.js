@@ -243,6 +243,10 @@ class Drawer {
     this.block_c_textures = []; // 1.0
     const texture_block_c = PIXI.Texture.from(`src/block_c/block_c_0000.png`);
     this.block_c_textures.push(texture_block_c);
+    //fall stunned
+    this.stun_fall_textures = []; // 1.0
+    const texture_stun_fall = PIXI.Texture.from(`src/stun_fall/stun_fall_0000.png`);
+    this.stun_fall_textures.push(texture_stun_fall);
     //punch
     this.punch_textures = [];
     for (let i = 0; i <= 9; i++) {
@@ -434,6 +438,13 @@ class Drawer {
           this.stick1.animationSpeed = 1.0;
         }
         break;
+      case "stun_fall":
+        if (this.curranimation1 != this.animation1) {
+          this.curranimation1 = this.animation1;
+          this.stick1.textures = this.stun_fall_textures;
+          this.stick1.animationSpeed = 1.0;
+        }
+        break;
       case "punch":
         if (this.curranimation1 != this.animation1) {
           this.curranimation1 = this.animation1;
@@ -505,6 +516,13 @@ class Drawer {
         if (this.curranimation2 != this.animation2) {
           this.curranimation2 = this.animation2;
           this.stick2.textures = this.block_c_textures;
+          this.stick2.animationSpeed = 1.0;
+        }
+        break;
+      case "stun_fall":
+        if (this.curranimation2 != this.animation2) {
+          this.curranimation2 = this.animation2;
+          this.stick2.textures = this.stun_fall_textures;
           this.stick2.animationSpeed = 1.0;
         }
         break;
@@ -600,10 +618,14 @@ function ChromaFilter() {
 
 // initial connection with server
 socket = io();
-socket.on("player", (player) => {
+socket.on("player", () => {
   drawer = new Drawer();
-  socket.emit("confirm", player);
+  socket.emit("confirm", null);
 });
+
+socket.on('test-connection', () => {
+  socket.emit('good-connection');
+})
 
 // done once a frame so 1/60 sec.
 socket.on("render", () => {

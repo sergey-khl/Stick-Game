@@ -5,9 +5,9 @@ class Game {
     let time = 99;
     this.socket1 = socket1;
     this.socket2 = socket2;
-    //this.player1 = new Player(2000 / 3, 550);
     this.player1 = new Player(2000 / 3, 950);
     this.player2 = new Player(4000 / 3, 950);
+    this.isGood = true;
 
     // clock
     setInterval(() => {
@@ -66,6 +66,11 @@ class Game {
     this.player1.updatePosition();
     this.player2.updatePosition();
   };
+
+  disconnected = () => {
+    this.socket1.emit('game-over', 3);
+    this.socket2.emit('game-over', 3);
+  }
 
   draw = () => {
     if (this.player1.getHealth() == 0 && this.player2.getHealth() == 0) {
@@ -151,7 +156,6 @@ class Game {
     for (let i = 0; i < attackCollisionPos1.length; i++) {
       // check if first player is dealing damage
       if (attackCollisionPos1[i]) {
-        const knockback = this.player2.isBlocking() ? 2 : 5;
         const damage = this.player2.isBlocking() ? attackCollisionPos1[i][4] / 2 : attackCollisionPos1[i][4];
         if (
           attackCollisionPos1[i][0] + attackCollisionPos1[i][2] >= player2Pos[0] - 75  &&
@@ -159,9 +163,9 @@ class Game {
           attackCollisionPos1[i][1] <= player2Pos[1] &&
           attackCollisionPos1[i][1] + attackCollisionPos1[i][3] >= player2Pos[1] - 400
         ) {
-          this.player2.setHealth(this.player2.getHealth() - damage)
+          this.player2.setHealth(this.player2.getHealth() - damage);
+          this.player2.setKnockback(attackCollisionPos1[i][5], true);
           this.player1.removeAttackCollision(attackCollisionPos1[i][5]);
-          this.player2.setKnockback(knockback);
           this.socket1.emit("damage", [2, this.player2.getHealth()]);
           this.socket2.emit("damage", [2, this.player2.getHealth()]);
         } else if (
@@ -170,9 +174,9 @@ class Game {
           attackCollisionPos1[i][1] <= player2Pos[1] &&
           attackCollisionPos1[i][1] + attackCollisionPos1[i][3] >= player2Pos[1] - 400
         ) {
-          this.player2.setHealth(this.player2.getHealth() - damage)
+          this.player2.setHealth(this.player2.getHealth() - damage);
+          this.player2.setKnockback(attackCollisionPos1[i][5], true);
           this.player1.removeAttackCollision(attackCollisionPos1[i][5]);
-          this.player2.setKnockback(knockback);
           this.socket1.emit("damage", [2, this.player2.getHealth()]);
           this.socket2.emit("damage", [2, this.player2.getHealth()]);
         }
@@ -190,9 +194,9 @@ class Game {
           attackCollisionPos2[i][1] <= player1Pos[1] &&
           attackCollisionPos2[i][1] + attackCollisionPos2[i][3] >= player1Pos[1] - 400
         ) {
-          this.player1.setHealth(this.player1.getHealth() - damage)
+          this.player1.setHealth(this.player1.getHealth() - damage);
+          this.player1.setKnockback(attackCollisionPos2[i][5], true);
           this.player2.removeAttackCollision(attackCollisionPos2[i][5]);
-          this.player1.setKnockback(knockback);
           this.socket1.emit("damage", [1, this.player1.getHealth()]);
           this.socket2.emit("damage", [1, this.player1.getHealth()]);
         } else if (
@@ -201,15 +205,20 @@ class Game {
           attackCollisionPos2[i][1] <= player1Pos[1] &&
           attackCollisionPos2[i][1] + attackCollisionPos2[i][3] >= player1Pos[1] - 400
         ) {
-          this.player1.setHealth(this.player1.getHealth() - damage)
+          this.player1.setHealth(this.player1.getHealth() - damage);
+          this.player1.setKnockback(attackCollisionPos2[i][5], true);
           this.player2.removeAttackCollision(attackCollisionPos2[i][5]);
-          this.player1.setKnockback(knockback);
           this.socket1.emit("damage", [1, this.player1.getHealth()]);
           this.socket2.emit("damage", [1, this.player1.getHealth()]);
         }
       }
     }
   };
+
+  getGood = () => {
+    console.log(this.socket1.connected, this.socket2.connected)
+    return this.socket1.connected && this.socket2.connected;
+  }
 }
 
 export { Game };

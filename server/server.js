@@ -23,45 +23,54 @@ const server = createServer(app);
 let io = new Server(server);
 
 // global player info
-let game;
-let conn1;
-let conn2;
+let players = [];
+let games = [];
 
 io.sockets.on('connection', (socket) => {
-    // first connection
-    if (!conn1) {
-        socket.emit('player', 1);
-    } else if (!conn2) { // second connection
-        socket.emit('player', 2);
+    if (players.indexOf(socket) == -1) {
+        socket.emit('player', null);
     }
     
     // connection confirmation
-    socket.on('confirm', (player) => {
-        if (player == 1) {
-            conn1 = socket;
-            console.log('first connected');
-        } else if (player == 2) {
-            conn2 = socket;
-            console.log('second connected');
-        } else {
-            console.log('error');
-        }
+    socket.on('confirm', () => {
+        players.push(socket);
     })
 });
 
+// run matchmaking every 1 second
+setInterval(() => {
+    let gamers = [];
+    players.map(player => {
+        gamers.push(player);
+        if (gamers.length == 2) {
+            games.push([new Game(gamers[0], gamers[1]), true]);
+            let index = players.indexOf(gamers[0]);
+            players.splice(index, 1);
+            index = players.indexOf(gamers[1]);
+            players.splice(index, 1);
+            gamers = [];
+        }
+    })
+}, 1000);
+
+// check connections every 1 second
+setInterval(() => {
+    games.map(game => {
+        game[1] = game[0].getGood();
+    })
+}, 1000);
+
 // run game at 60 fps
 setInterval(() => {
-    if (conn1 && conn2 && game) {
-        
-        game.draw();
-        game.updatePosition();
-        game.updateMovement();
-
-    } else if (conn1 && conn2 && !game) {
-        game = new Game(conn1, conn2)
-    } else if (game && (!conn1 || !conn2)) {
-        console.log('some user disconnected')
-    }
+    games.map(game => {
+        if (game[1]) {
+            game[0].draw();
+            game[0].updatePosition();
+            game[0].updateMovement();
+        } else {
+            game[0].disconnected();
+        }
+    })
 }, 1000 / FPS);
 
 
