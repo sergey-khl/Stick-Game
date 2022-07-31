@@ -29,6 +29,8 @@ const keyDown = (e) => {
     keys['block'] = true;
   } else if (e.key == 'q') {
     keys['throw'] = true;
+  } else if (e.key == 'e') {
+    keys['sweep'] = true;
   }
 };
 
@@ -38,6 +40,8 @@ const keyUp = (e) => {
     keys['block'] = false;
   } else if (e.key == 'q') {
     keys['throw'] = false;
+  } else if (e.key == 'e') {
+    keys['sweep'] = false;
   }
 };
 
@@ -269,6 +273,16 @@ class Drawer {
       const texture = PIXI.Texture.from(`src/throw_shurikens/throw_shurikens_00${i}.png`);
       this.throw_shurikens_textures.push(texture);
     }
+    // sweep
+    this.sweep_textures = [];
+    for (let i = 0; i <= 9; i++) {
+      const texture = PIXI.Texture.from(`src/sweep/sweep_000${i}.png`);
+      this.sweep_textures.push(texture);
+    }
+    for (let i = 10; i <= 11; i++) {
+      const texture = PIXI.Texture.from(`src/sweep/sweep_00${i}.png`);
+      this.sweep_textures.push(texture);
+    }
   }
 
   // adjust for screen size 
@@ -353,6 +367,7 @@ class Drawer {
   };
 
 
+  // helper function to see where collisions are happening
   drawHitBoxes = () => {
     this.hitBox1.clear();
     this.hitBox2.clear();
@@ -434,12 +449,19 @@ class Drawer {
         this.stick1.animationSpeed = 12 / (60 * 0.6);
         break;
       case "throw_shurikens":
-          if (this.curranimation1 != this.animation1) {
-            this.curranimation1 = this.animation1;
-            this.stick1.textures = this.throw_shurikens_textures;
-          }
-          this.stick1.animationSpeed = 12 / (60 * 0.4);
-          break;
+        if (this.curranimation1 != this.animation1) {
+          this.curranimation1 = this.animation1;
+          this.stick1.textures = this.throw_shurikens_textures;
+        }
+        this.stick1.animationSpeed = 12 / (60 * 0.4);
+        break;
+      case "sweep":
+        if (this.curranimation1 != this.animation1) {
+          this.curranimation1 = this.animation1;
+          this.stick1.textures = this.sweep_textures;
+        }
+        this.stick1.animationSpeed = 13 / (60 * 0.7);
+        break;
     }
     this.stick1.play();
 
@@ -500,17 +522,23 @@ class Drawer {
           }
           this.stick2.animationSpeed = 12 / (60 * 0.6);
           break;
-        case "throw_shurikens":
-            if (this.curranimation2 != this.animation2) {
-              this.curranimation2 = this.animation2;
-              this.stick2.textures = this.throw_shurikens_textures;
-            }
-            this.stick2.animationSpeed = 12 / (60 * 0.4);
-            break;
+      case "throw_shurikens":
+        if (this.curranimation2 != this.animation2) {
+          this.curranimation2 = this.animation2;
+          this.stick2.textures = this.throw_shurikens_textures;
+        }
+        this.stick2.animationSpeed = 12 / (60 * 0.4);
+        break;
+      case "sweep":
+        if (this.curranimation2 != this.animation2) {
+          this.curranimation2 = this.animation2;
+          this.stick2.textures = this.sweep_textures;
+        }
+        this.stick2.animationSpeed = 13 / (60 * 0.7);
+        break;
     }
     this.stick2.play();
 
-    console.log(this.proj_alive1, this.proj_alive2)
     if (this.proj_alive1) {
       this.shuriken1.visible = true;
       this.shuriken1.play();
@@ -580,7 +608,7 @@ socket.on("player", (player) => {
 // done once a frame so 1/60 sec.
 socket.on("render", () => {
   drawer.scale();
-  // drawer.drawHitBoxes();
+  //drawer.drawHitBoxes();
   drawer.drawHealth();
   drawer.drawPlayers();
 });
