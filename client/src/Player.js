@@ -33,9 +33,9 @@ class Player {
       for (let i = 0; i < this.attackCollisionPos.length; i++) {
         if (this.attackCollisionPos[i]) {
           if (this.attackCollisionPos[i][5] == 'punch') {
-            newAttackCollisionPos.push([this.position[0], this.position[1] + 100, this.attackCollisionPos[i][2], this.attackCollisionPos[i][3], this.attackCollisionPos[i][4], this.attackCollisionPos[i][5]]);
+            newAttackCollisionPos.push([this.position[0], this.position[1] - 300, this.attackCollisionPos[i][2], this.attackCollisionPos[i][3], this.attackCollisionPos[i][4], this.attackCollisionPos[i][5]]);
           } else if (this.attackCollisionPos[i][5] == 'kick') {
-            newAttackCollisionPos.push([this.position[0], this.position[1] + 250, this.attackCollisionPos[i][2], this.attackCollisionPos[i][3], this.attackCollisionPos[i][4], this.attackCollisionPos[i][5]]);
+            newAttackCollisionPos.push([this.position[0], this.position[1] - 240, this.attackCollisionPos[i][2], this.attackCollisionPos[i][3], this.attackCollisionPos[i][4], this.attackCollisionPos[i][5]]);
           } else if (this.attackCollisionPos[i][5] == 'throw_shurikens') {
             newAttackCollisionPos.push([this.attackCollisionPos[i][0] + (this.left ? -15 : 15), this.attackCollisionPos[i][1], this.attackCollisionPos[i][2], this.attackCollisionPos[i][3], this.attackCollisionPos[i][4], this.attackCollisionPos[i][5]]);
           }
@@ -62,7 +62,7 @@ class Player {
             this.velocity[0] = this.left ? -10 : 10;
             this.addAttackCollision(
               this.position[0],
-              this.position[1] + 100,
+              this.position[1] - 300,
               (this.left ? -150 : 150),
               70,
               5,
@@ -81,15 +81,15 @@ class Player {
             this.velocity[0] = this.left ? -2 : 2;
             this.addAttackCollision(
               this.position[0],
-              this.position[1] + 250,
-              (this.left ? -300 : 300),
+              this.position[1] - 240,
+              (this.left ? -200 : 200),
               70,
               8,
               'kick'
             );
           } else if (this.frame_count == 30) {
             this.velocity[0] = this.left ? -10 : 10;
-            this.removeAttackCollision(null, null, null, null, null, null);
+            this.removeAttackCollision('kick');
           } else if (this.frame_count >= 35) {
             this.frame_count = 0;
             this.velocity[0] = 0;
@@ -99,7 +99,7 @@ class Player {
           if (this.frame_count == 14) {
             this.addAttackCollision(
               this.position[0] + (this.left ? -95 + 25 : 95 - 25),
-              this.position[1] + 250 - 25,
+              this.position[1] - 170 + 25,
               (this.left ? -50 : 50),
               50,
               5,

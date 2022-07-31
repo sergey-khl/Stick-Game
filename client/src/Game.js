@@ -5,8 +5,9 @@ class Game {
     let time = 99;
     this.socket1 = socket1;
     this.socket2 = socket2;
-    this.player1 = new Player(2000 / 3, 550);
-    this.player2 = new Player(4000 / 3, 550);
+    //this.player1 = new Player(2000 / 3, 550);
+    this.player1 = new Player(2000 / 3, 950);
+    this.player2 = new Player(4000 / 3, 950);
 
     // clock
     setInterval(() => {
@@ -155,8 +156,8 @@ class Game {
         if (
           attackCollisionPos1[i][0] + attackCollisionPos1[i][2] >= player2Pos[0] - 75  &&
           attackCollisionPos1[i][0] <= player2Pos[0] + 75 &&
-          attackCollisionPos1[i][1] <= player2Pos[1] + 400  &&
-          attackCollisionPos1[i][1] + attackCollisionPos1[i][3] >= player2Pos[1]
+          attackCollisionPos1[i][1] <= player2Pos[1] &&
+          attackCollisionPos1[i][1] + attackCollisionPos1[i][3] >= player2Pos[1] - 400
         ) {
           this.player2.setHealth(this.player2.getHealth() - damage)
           this.player1.removeAttackCollision(attackCollisionPos1[i][5]);
@@ -166,8 +167,8 @@ class Game {
         } else if (
           attackCollisionPos1[i][0] >= player2Pos[0] - 75 &&
           attackCollisionPos1[i][0] + attackCollisionPos1[i][2] <= player2Pos[0] + 75 &&
-          attackCollisionPos1[i][1] <= player2Pos[1] + 400 &&
-          attackCollisionPos1[i][1] + attackCollisionPos1[i][3] >= player2Pos[1]
+          attackCollisionPos1[i][1] <= player2Pos[1] &&
+          attackCollisionPos1[i][1] + attackCollisionPos1[i][3] >= player2Pos[1] - 400
         ) {
           this.player2.setHealth(this.player2.getHealth() - damage)
           this.player1.removeAttackCollision(attackCollisionPos1[i][5]);
@@ -186,8 +187,8 @@ class Game {
         if (
           attackCollisionPos2[i][0] + attackCollisionPos2[i][2] >= player1Pos[0] - 75 &&
           attackCollisionPos2[i][0] <= player1Pos[0] + 75 &&
-          attackCollisionPos2[i][1] <= player1Pos[1] + 400 &&
-          attackCollisionPos2[i][1] + attackCollisionPos2[i][3] >= player1Pos[1]
+          attackCollisionPos2[i][1] <= player1Pos[1] &&
+          attackCollisionPos2[i][1] + attackCollisionPos2[i][3] >= player1Pos[1] - 400
         ) {
           this.player1.setHealth(this.player1.getHealth() - damage)
           this.player2.removeAttackCollision(attackCollisionPos2[i][5]);
@@ -197,8 +198,8 @@ class Game {
         } else if (
           attackCollisionPos2[i][0] >= player1Pos[0] - 75 &&
           attackCollisionPos2[i][0] + attackCollisionPos2[i][2] <= player1Pos[0] + 75 &&
-          attackCollisionPos2[i][1] <= player1Pos[1] + 400 &&
-          attackCollisionPos2[i][1] + attackCollisionPos2[i][3] >= player1Pos[1]
+          attackCollisionPos2[i][1] <= player1Pos[1] &&
+          attackCollisionPos2[i][1] + attackCollisionPos2[i][3] >= player1Pos[1] - 400
         ) {
           this.player1.setHealth(this.player1.getHealth() - damage)
           this.player2.removeAttackCollision(attackCollisionPos2[i][5]);

@@ -172,14 +172,18 @@ class Drawer {
     this.stick1 = new PIXI.AnimatedSprite(this.idle_textures);
     this.stick1.animationSpeed = 0.2;
     this.stick1.anchor.x = 0.5;
+    this.stick1.anchor.y = 1.0;
     this.stick1.width = 250 * scalex;
     this.stick1.height = 400 * scaley;
+    this.stick1.y += this.stick1.height;
     this.stick1.filters = [this.filter];
     this.stick2 = new PIXI.AnimatedSprite(this.idle_textures);
     this.stick1.animationSpeed = 0.2;
     this.stick2.anchor.x = 0.5;
+    this.stick2.anchor.y = 1.0;
     this.stick2.width = 250 * scalex;
     this.stick2.height = 400  * scaley;
+    this.stick2.y += this.stick2.height;
     this.stick2.filters = [this.filter];
     app.stage.addChild(this.stick1);
     app.stage.addChild(this.stick2);
@@ -576,7 +580,7 @@ socket.on("player", (player) => {
 // done once a frame so 1/60 sec.
 socket.on("render", () => {
   drawer.scale();
-  //drawer.drawHitBoxes();
+  // drawer.drawHitBoxes();
   drawer.drawHealth();
   drawer.drawPlayers();
 });
