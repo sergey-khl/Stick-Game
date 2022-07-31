@@ -216,7 +216,6 @@ class Game {
   };
 
   getGood = () => {
-    console.log(this.socket1.connected, this.socket2.connected)
     return this.socket1.connected && this.socket2.connected;
   }
 }

@@ -7,11 +7,11 @@ const app = new Application({
 
 document.body.appendChild(app.view);
 
+
 const Graphics = PIXI.Graphics;
 const Container = PIXI.Container;
 
 let keys = { 'last': '', 'w': false, 'a': false, 's': false, 'd': false, 'punch': false, 'kick': false, 'block': false, 'throw': false };
-let drawer;
 
 // scale according to screen of developed on dimensions
 let scalex = window.innerWidth / 2000
@@ -19,6 +19,7 @@ let scaley = window.innerHeight / 1000;
 const ground_width = window.innerWidth;
 const ground_height = window.innerHeight / 10 ;
 const player_height = window.innerHeight - ground_height - 400;
+
 
 const keyDown = (e) => {
   keys[e.key] = true;
@@ -67,6 +68,14 @@ const contextClick = (e) => {
 
 class Drawer {
   constructor() {
+    // local game state
+    this.gameState = '';
+    this.find_match = document.getElementById('find_match');
+
+    socket.on("new-game", () => {
+      this.setGameState("game");  
+    });
+
     // health bars
     this.health1 = 100;
     this.healthContainer1 = new Container();
@@ -114,10 +123,8 @@ class Drawer {
     socket.on("damage", (data) => {
       if (data[0] == 1) {
         this.health1 = data[1];
-        //socket.emit('knockback', 1)
       } else if (data[0] == 2) {
         this.health2 = data[1];
-        //socket.emit('knockback', 2)
       }     
     });
 
@@ -287,6 +294,8 @@ class Drawer {
       const texture = PIXI.Texture.from(`src/sweep/sweep_00${i}.png`);
       this.sweep_textures.push(texture);
     }
+
+    this.setGameState("main_menu")
   }
 
   // adjust for screen size 
@@ -571,6 +580,32 @@ class Drawer {
       this.shuriken2.visible = false;
     }
   };
+
+  switchGameState = () => {
+    if (this.gameState == "main_menu") {
+      this.eraseAll();
+      this.find_match.style.display = "block";
+    } else if (this.gameState == "game") {
+      this.eraseAll();
+      this.stick1.visible = true;
+      this.stick2.visible = true;
+      this.shuriken1.visible = true;
+      this.shuriken2.visible = true;
+    }
+  }
+
+  eraseAll = () => {
+    this.stick1.visible = false;
+    this.stick2.visible = false;
+    this.shuriken1.visible = false;
+    this.shuriken2.visible = false;
+    this.find_match.style.display = "none";
+  }
+
+  setGameState = (gameState) => {
+    this.gameState = gameState;
+    this.switchGameState();
+  }
 }
 
 // add ground to screen
@@ -618,14 +653,7 @@ function ChromaFilter() {
 
 // initial connection with server
 socket = io();
-socket.on("player", () => {
-  drawer = new Drawer();
-  socket.emit("confirm", null);
-});
-
-socket.on('test-connection', () => {
-  socket.emit('good-connection');
-})
+const drawer = new Drawer();
 
 // done once a frame so 1/60 sec.
 socket.on("render", () => {
@@ -634,6 +662,10 @@ socket.on("render", () => {
   drawer.drawHealth();
   drawer.drawPlayers();
 });
+
+const find_match = () => {
+  socket.emit('find_match', null)
+}
 
 document.addEventListener("keydown", keyDown);
 document.addEventListener("keyup", keyUp);

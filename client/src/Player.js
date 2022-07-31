@@ -133,7 +133,7 @@ class Player {
               this.position[1] - 170 + 25,
               (this.left ? -50 : 50),
               50,
-              5,
+              2,
               'throw_shurikens'
             );
           } else if (this.frame_count >= 23) {

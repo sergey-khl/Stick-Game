@@ -27,13 +27,11 @@ let players = [];
 let games = [];
 
 io.sockets.on('connection', (socket) => {
-    if (players.indexOf(socket) == -1) {
-        socket.emit('player', null);
-    }
-    
     // connection confirmation
-    socket.on('confirm', () => {
-        players.push(socket);
+    socket.on('find_match', () => {
+        if (players.indexOf(socket) == -1) {
+            players.push(socket);
+        }
     })
 });
 
@@ -44,6 +42,8 @@ setInterval(() => {
         gamers.push(player);
         if (gamers.length == 2) {
             games.push([new Game(gamers[0], gamers[1]), true]);
+            gamers[0].emit('new-game');
+            gamers[1].emit('new-game');
             let index = players.indexOf(gamers[0]);
             players.splice(index, 1);
             index = players.indexOf(gamers[1]);
