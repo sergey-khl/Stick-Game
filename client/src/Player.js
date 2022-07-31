@@ -98,8 +98,8 @@ class Player {
         } else if (this.animation == 'throw_shurikens') {
           if (this.frame_count == 14) {
             this.addAttackCollision(
-              this.position[0] + (this.left ? -95 : 95),
-              this.position[1] + 250,
+              this.position[0] + (this.left ? -95 + 25 : 95 - 25),
+              this.position[1] + 250 - 25,
               (this.left ? -50 : 50),
               50,
               5,
@@ -169,24 +169,24 @@ class Player {
         }
       }
     }
-      // jumping
-      if (this.jumping) {
-        this.animation = 'jump';
-        // end jump
-        if (this.position[1] > this.standing_height) {
-          this.acceleration = [0, 0];
-          this.velocity[1] = 0;
-          this.jumping = false;
-          this.position[1] = this.standing_height;
-        }
+    // jumping
+    if (this.jumping) {
+      this.animation = 'jump';
+      // end jump
+      if (this.position[1] > this.standing_height) {
+        this.acceleration = [0, 0];
+        this.velocity[1] = 0;
+        this.jumping = false;
+        this.position[1] = this.standing_height;
       }
+    }
 
-      // deny movement if collision
-      if (this.collidingLeft && this.velocity[0] < 0) {
-        this.velocity[0] = 0;
-      }  else if (this.collidingRight && this.velocity[0] > 0) {
-        this.velocity[0] = 0;
-      }
+    // deny movement if collision
+    if (this.collidingLeft && this.velocity[0] < 0) {
+      this.velocity[0] = 0;
+    }  else if (this.collidingRight && this.velocity[0] > 0) {
+      this.velocity[0] = 0;
+    }
   };
 
   updatePosition() {

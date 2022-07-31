@@ -168,6 +168,7 @@ class Drawer {
       const texture = PIXI.Texture.from(`src/idle/idle_00${i}.png`);
       this.idle_textures.push(texture);
     }
+    // add stick animation
     this.stick1 = new PIXI.AnimatedSprite(this.idle_textures);
     this.stick1.animationSpeed = 0.2;
     this.stick1.anchor.x = 0.5;
@@ -182,6 +183,29 @@ class Drawer {
     this.stick2.filters = [this.filter];
     app.stage.addChild(this.stick1);
     app.stage.addChild(this.stick2);
+
+
+    // shuriken
+    this.shuriken_textures = []; // 0.2
+    for (let i = 0; i <= 2; i++) {
+      const texture = PIXI.Texture.from(`src/shuriken/shuriken_000${i}.png`);
+      this.shuriken_textures.push(texture);
+    }
+    // add shuriken animation 
+    this.shuriken1 = new PIXI.AnimatedSprite(this.shuriken_textures);
+    this.shuriken1.animationSpeed = 0.2;
+    this.shuriken1.width = 50 * scalex;
+    this.shuriken1.height = 50 * scaley;
+    this.shuriken1.filters = [this.filter];
+    this.shuriken2 = new PIXI.AnimatedSprite(this.shuriken_textures);
+    this.proj_alive1 = false;
+    this.shuriken2.animationSpeed = 0.2;
+    this.shuriken2.width = 50 * scalex;
+    this.shuriken2.height = 50  * scaley;
+    this.shuriken2.filters = [this.filter];
+    this.proj_alive2 = false;
+    app.stage.addChild(this.shuriken1);
+    app.stage.addChild(this.shuriken2);
 
     //walk
     this.walk_textures = []; // 0.3
@@ -250,20 +274,30 @@ class Drawer {
     this.player2Pos[0] *= scalex;
     this.player2Pos[1] *= scaley;
     if (this.attackCollisionPos1) {
+      let alive = false;
       for (let i = 0; i < this.attackCollisionPos1.length; i++) {
+        if (this.attackCollisionPos1[i][5] == 'throw_shurikens') {
+          alive = true;
+        }
         this.attackCollisionPos1[i][0] *= scalex;
         this.attackCollisionPos1[i][1] *= scaley;
         this.attackCollisionPos1[i][2] *= scalex;
         this.attackCollisionPos1[i][3] *= scaley;
       }
+      this.proj_alive1 = alive;
     }
     if (this.attackCollisionPos2) {
+      let alive = false;
       for (let i = 0; i < this.attackCollisionPos2.length; i++) {
+        if (this.attackCollisionPos2[i][5] == 'throw_shurikens') {
+          alive = true;
+        }
         this.attackCollisionPos2[i][0] *= scalex;
         this.attackCollisionPos2[i][1] *= scaley;
         this.attackCollisionPos2[i][2] *= scalex;
         this.attackCollisionPos2[i][3] *= scaley;
       }
+      this.proj_alive2 = alive;
     }
   }
 
@@ -289,16 +323,31 @@ class Drawer {
     this.stick1.y = this.player1Pos[1];
     this.stick2.x = this.player2Pos[0];
     this.stick2.y = this.player2Pos[1];
+    for (let i = 0; i < this.attackCollisionPos1.length; i++) {
+      if (this.attackCollisionPos1[i][5] == 'throw_shurikens') {
+        this.shuriken1.x = this.attackCollisionPos1[i][0];
+        this.shuriken1.y = this.attackCollisionPos1[i][1];
+      }
+    }
+    for (let i = 0; i < this.attackCollisionPos2.length; i++) {
+      if (this.attackCollisionPos2[i][5] == 'throw_shurikens') {
+        this.shuriken2.x = this.attackCollisionPos2[i][0];
+        this.shuriken2.y = this.attackCollisionPos2[i][1];
+      }
+    }
 
     if ((this.stick1.scale.x > 0 && this.player1Left) || (this.stick1.scale.x < 0 && !this.player1Left)) {
       this.stick1.scale.x *= -1;
+      this.shuriken1.scale.x *= -1;
     }
     if ((this.stick2.scale.x > 0 && this.player2Left) || (this.stick2.scale.x < 0 && !this.player2Left)) {
       this.stick2.scale.x *= -1;
+      this.shuriken2.scale.x *= -1;
     }
 
     this.animate();
   };
+
 
   drawHitBoxes = () => {
     this.hitBox1.clear();
@@ -456,6 +505,21 @@ class Drawer {
             break;
     }
     this.stick2.play();
+
+    console.log(this.proj_alive1, this.proj_alive2)
+    if (this.proj_alive1) {
+      this.shuriken1.visible = true;
+      this.shuriken1.play();
+    } else {
+      this.shuriken1.visible = false;
+    }
+
+    if (this.proj_alive2) {
+      this.shuriken2.visible = true;
+      this.shuriken2.play();
+    } else {
+      this.shuriken2.visible = false;
+    }
   };
 }
 
@@ -512,7 +576,7 @@ socket.on("player", (player) => {
 // done once a frame so 1/60 sec.
 socket.on("render", () => {
   drawer.scale();
-  drawer.drawHitBoxes();
+  //drawer.drawHitBoxes();
   drawer.drawHealth();
   drawer.drawPlayers();
 });
