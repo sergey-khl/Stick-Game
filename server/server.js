@@ -51,6 +51,7 @@ setInterval(() => {
             gamers = [];
         }
     })
+    io.emit('online', players.length);
 }, 1000);
 
 // check connections every 1 second

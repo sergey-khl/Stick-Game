@@ -76,6 +76,10 @@ class Drawer {
       this.setGameState("game");  
     });
 
+    socket.on("online", num => {
+      this.find_match.innerText = "Find Match, online: " + String(num);
+    })
+
     // health bars
     this.health1 = 100;
     this.healthContainer1 = new Container();
