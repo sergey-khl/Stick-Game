@@ -1,9 +1,12 @@
 const Application = PIXI.Application;
 const app = new Application({
+  width: window.innerWidth,
+  height: window.innerHeight,
   autoResize: true,
-  resolution: window.devicePixelRatio,
-  transparent: true,
+  resolution: 1,
+  transparent: true
 });
+
 
 document.body.appendChild(app.view);
 
@@ -17,9 +20,8 @@ let keys = { 'last': '', 'w': false, 'a': false, 's': false, 'd': false, 'punch'
 let scalex = window.innerWidth / 2000
 let scaley = window.innerHeight / 1000;
 const ground_width = window.innerWidth;
-const ground_height = window.innerHeight / 10 ;
+const ground_height = window.innerHeight * 2 / 10 ;
 const player_height = window.innerHeight - ground_height - 400;
-
 
 const keyDown = (e) => {
   keys[e.key] = true;
@@ -71,6 +73,7 @@ class Drawer {
     // local game state
     this.gameState = '';
     this.find_match = document.getElementById('find_match');
+    
 
     socket.on("new-game", () => {
       this.setGameState("game");  
@@ -92,7 +95,7 @@ class Drawer {
     this.healthContainer1.y = window.innerHeight / 20;
     health_total1
       .beginFill(0xff0000)
-      .drawRect(0, 0, (window.innerWidth / 2 - window.innerWidth / 10), window.innerHeight / 20); // player 1
+      .drawRect(0, 0, (window.innerWidth / 2 - window.innerWidth / 10), window.innerHeight / 20); // player 
 
 
 
@@ -121,7 +124,7 @@ class Drawer {
     this.time.fontSize = 45 * scalex;
 
     socket.on("time", (time) => {
-      this.time.text = time.toString();
+      this.time.text = time.toString(); 
     });
     app.stage.addChild(this.time);
 
@@ -620,11 +623,12 @@ ground
   .beginFill(0x964b00)
   .drawRect(
     0,
-    window.innerHeight * scalex - ground_height,
+    window.innerHeight - ground_height,
     ground_width,
-    ground_height * 3
+    ground_height * 2
   )
   .endFill();
+
 app.stage.addChild(ground);
 
 // remove white background from animations
@@ -690,7 +694,7 @@ app.ticker.add((delta) => {
 window.addEventListener("resize", resize);
 
 function resize() {
-  app.renderer.resize(window.innerWidth, window.innerHeight);
+  app.renderer.resize(app.screen.width, app.screen.height);
 }
 
 resize();
