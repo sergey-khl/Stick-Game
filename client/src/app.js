@@ -94,6 +94,8 @@ class Drawer {
       .beginFill(0xff0000)
       .drawRect(0, 0, (window.innerWidth / 2 - window.innerWidth / 10), window.innerHeight / 20); // player 1
 
+
+
     this.health2 = 100;
     this.healthContainer2 = new Container();
     app.stage.addChild(this.healthContainer2);

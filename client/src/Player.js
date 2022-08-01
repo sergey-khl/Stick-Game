@@ -23,6 +23,7 @@ class Player {
     this.collidingLeft = false;
     this.collidingRight = false;
     this.knockback = '';
+    this.cooldowns = { 'throw_shurikens': 0, 'sweep': 0 };
 
     this.attackCollisionPos = [];
   }
@@ -47,6 +48,11 @@ class Player {
       } 
       this.setAttackCollision(newAttackCollisionPos);
     }
+
+    // // update cooldowns
+    // Object.keys(this.cooldowns).map((key) => {
+    //   this.cooldowns[key] -= ;
+    // });
     
 
     if (this.knockback != '') { // we are being knocked back
