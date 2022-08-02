@@ -4,7 +4,7 @@ const app = new Application({
   height: window.innerHeight,
   autoResize: true,
   resolution: 1,
-  transparent: true
+  transparent: true,
 });
 
 
@@ -112,6 +112,74 @@ class Drawer {
       .beginFill(0xff0000)
       .drawRect(0, 0, (window.innerWidth / 2 - window.innerWidth / 10), window.innerHeight / 20); // player 2
 
+    // cooldowns
+    // throw
+    this.throw_container = new Container();
+    app.stage.addChild(this.throw_container);
+    // input
+    const throw_c = new PIXI.Text("Q", {
+      fill: "#333333",
+      fontSize: 65,
+      fontWeight: "bold",
+      align: "center",
+    });
+    throw_c.anchor.x = 0.5;
+    throw_c.x = window.innerWidth / 40;
+    throw_c.y = window.innerWidth / 150;
+    const throw_c_border = new Graphics();
+    const throw_c_grey = new Graphics();
+    this.throw_c_overlay = new Graphics();
+    this.throw_container.addChild(throw_c_border);
+    this.throw_container.addChild(throw_c_grey);
+    this.throw_container.addChild(throw_c);
+    this.throw_container.addChild(this.throw_c_overlay);
+    this.throw_container.x = window.innerWidth / 2 - window.innerWidth / 20;
+    this.throw_container.y = window.innerHeight * 2.5 / 20;
+    this.throw_c_overlay.x = window.innerWidth / 40;
+    this.throw_c_overlay.y = window.innerWidth / 40;
+    throw_c_border
+      .beginFill(0xFFFFFF)
+      .lineStyle(2, 0x000000)
+      .drawRoundedRect(0, 0, window.innerWidth / 20, window.innerWidth / 20, 10); // black border
+    throw_c_grey
+      .beginFill(0x000000, 0.5)
+      .drawRoundedRect(0, 0, window.innerWidth / 20, window.innerWidth / 20, 10); // grey timer showing thing
+    throw_c_grey.mask = this.throw_c_overlay;
+
+    // sweep
+    this.sweep_container = new Container();
+    app.stage.addChild(this.sweep_container);
+    // input
+    const sweep_c = new PIXI.Text("E", {
+      fill: "#333333",
+      fontSize: 65,
+      fontWeight: "bold",
+      align: "center",
+    });
+    sweep_c.anchor.x = 0.5;
+    sweep_c.x = window.innerWidth / 40;
+    sweep_c.y = window.innerWidth / 150;
+    const sweep_c_border = new Graphics();
+    const sweep_c_grey = new Graphics();
+    this.sweep_c_overlay = new Graphics();
+    this.sweep_container.addChild(sweep_c_border);
+    this.sweep_container.addChild(sweep_c_grey);
+    this.sweep_container.addChild(sweep_c);
+    this.sweep_container.addChild(this.sweep_c_overlay);
+    this.sweep_container.x = window.innerWidth / 2;
+    this.sweep_container.y = window.innerHeight * 2.5 / 20;
+    this.sweep_c_overlay.x = window.innerWidth / 40;
+    this.sweep_c_overlay.y = window.innerWidth / 40;
+    sweep_c_border
+      .beginFill(0xFFFFFF)
+      .lineStyle(2, 0x000000)
+      .drawRoundedRect(0, 0, window.innerWidth / 20, window.innerWidth / 20, 10); // black border
+    sweep_c_grey
+      .beginFill(0x000000, 0.5)
+      .drawRoundedRect(0, 0, window.innerWidth / 20, window.innerWidth / 20, 10); // grey timer showing thing
+    sweep_c_grey.mask = this.sweep_c_overlay;
+
+    //time
     this.time = new PIXI.Text("99", {
       fill: "#333333",
       fontSize: 40,
@@ -121,7 +189,6 @@ class Drawer {
     this.time.anchor.x = 0.5;
     this.time.position.x = window.innerWidth / 2;
     this.time.position.y = window.innerHeight / 20;
-    this.time.fontSize = 45 * scalex;
 
     socket.on("time", (time) => {
       this.time.text = time.toString(); 
@@ -147,6 +214,7 @@ class Drawer {
     this.curranimation2 = "none";
     this.attackCollisionPos1 = [];
     this.attackCollisionPos2 = [];
+    this.cooldowns = { 'throw_shurikens': 0, 'sweep': 0, 'punch': 0, 'kick': 0 };
     this.hitBox1 = new Graphics();
     this.hitBox2 = new Graphics();
     this.proj1 = new Graphics();
@@ -167,6 +235,7 @@ class Drawer {
       this.player2Left = data["player2Info"][3];
       this.attackCollisionPos1 = data["attackCollisionPos1"];
       this.attackCollisionPos2 = data["attackCollisionPos2"];
+      this.cooldowns = data["cooldowns"];
     });
 
     socket.on("game-over", (winner) => {
@@ -356,6 +425,19 @@ class Drawer {
       .beginFill(0x00ff00)
       .drawRect(0, 0, (this.health2 / 100) * (window.innerWidth / 2 - window.innerWidth / 10), window.innerHeight / 20);
   };
+
+  drawCooldowns = () => {
+    const throw_p = this.cooldowns['throw_shurikens'] / this.cooldowns['throw_shurikens_max'];
+    const sweep_p = this.cooldowns['sweep'] / this.cooldowns['sweep_max'];
+    this.throw_c_overlay.clear();
+    this.sweep_c_overlay.clear();
+    this.throw_c_overlay
+      .lineStyle(window.innerWidth / 20, 0x000000, 0.5)
+      .arc(0, 0, window.innerWidth / 40, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * throw_p);
+    this.sweep_c_overlay
+      .lineStyle(window.innerWidth / 20, 0x000000, 0.5)
+      .arc(0, 0, window.innerWidth / 40, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * sweep_p);
+  }
 
   drawPlayers = () => {
     // draw players to screen
@@ -670,6 +752,7 @@ socket.on("render", () => {
   drawer.scale();
   //drawer.drawHitBoxes();
   drawer.drawHealth();
+  drawer.drawCooldowns();
   drawer.drawPlayers();
 });
 

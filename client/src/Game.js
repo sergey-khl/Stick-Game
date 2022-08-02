@@ -52,6 +52,7 @@ class Game {
       player2Info: this.player2.getInfo(),
       attackCollisionPos1: this.player1.getAttackCollision(),
       attackCollisionPos2: this.player2.getAttackCollision(),
+      cooldowns: this.player1.getCooldowns(),
     });
 
     this.socket2.emit("new-info", {
@@ -59,6 +60,7 @@ class Game {
       player2Info: this.player2.getInfo(),
       attackCollisionPos1: this.player1.getAttackCollision(),
       attackCollisionPos2: this.player2.getAttackCollision(),
+      cooldowns: this.player2.getCooldowns(),
     });
   };
 

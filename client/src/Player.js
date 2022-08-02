@@ -23,7 +23,7 @@ class Player {
     this.collidingLeft = false;
     this.collidingRight = false;
     this.knockback = '';
-    this.cooldowns = { 'throw_shurikens': 0, 'sweep': 0 };
+    this.cooldowns = { 'throw_shurikens': 0, 'throw_shurikens_max': 5, 'sweep': 0, 'sweep_max': 5, 'punch': 0, 'kick': 0 };
 
     this.attackCollisionPos = [];
   }
@@ -49,10 +49,16 @@ class Player {
       this.setAttackCollision(newAttackCollisionPos);
     }
 
-    // // update cooldowns
-    // Object.keys(this.cooldowns).map((key) => {
-    //   this.cooldowns[key] -= ;
-    // });
+    // update cooldowns
+    Object.keys(this.cooldowns).map((key) => {
+      if (key != 'throw_shurikens_max' && key != 'sweep_max') {
+        if (this.cooldowns[key] > 0) {
+          this.cooldowns[key] -= 1/60;
+        } else {
+          this.cooldowns[key] = 0;
+        }
+      }
+    });
     
 
     if (this.knockback != '') { // we are being knocked back
@@ -169,22 +175,26 @@ class Player {
       }
       
       // start an attack, start init speed here
-      if (this.keys['punch'] && !this.attacking && !this.jumping) {
+      if (this.keys['punch'] && !this.attacking && !this.jumping && this.cooldowns['punch'] == 0) {
+        this.cooldowns['punch'] = 0.5;
         this.attacking = true;
         this.crouching = false;
         this.animation = 'punch';
         this.velocity[0] = this.left ? -5 : 5;
-      } else if (this.keys['kick'] && !this.attacking && !this.jumping) {
+      } else if (this.keys['kick'] && !this.attacking && !this.jumping && this.cooldowns['kick'] == 0) {
+        this.cooldowns['kick'] = 0.5;
         this.attacking = true;
         this.crouching = false;
         this.animation = 'kick';
         this.velocity[0] = this.left ? -10 : 10;
-      } else if (this.keys['throw'] && !this.attacking && !this.jumping) {
+      } else if (this.keys['throw'] && !this.attacking && !this.jumping && this.cooldowns['throw_shurikens'] == 0) {
+        this.cooldowns['throw_shurikens'] = 5;
         this.attacking = true;
         this.crouching = false;
         this.animation = 'throw_shurikens';
         this.velocity[0] = 0;
-      } else if (this.keys['sweep'] && !this.attacking && !this.jumping) {
+      } else if (this.keys['sweep'] && !this.attacking && !this.jumping && this.cooldowns['sweep'] == 0) {
+        this.cooldowns['sweep'] = 5;
         this.attacking = true;
         this.crouching = false;
         this.animation = 'sweep';
@@ -281,6 +291,10 @@ class Player {
   getInfo = () => {
     return [this.position[0], this.position[1], this.animation, this.left];
   };
+
+  getCooldowns = () => {
+    return this.cooldowns;
+  }
 
   isBlocking = () => {
     return this.blocking;
