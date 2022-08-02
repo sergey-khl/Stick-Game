@@ -26,12 +26,26 @@ let io = new Server(server);
 let players = [];
 let games = [];
 
+for (let i = 0; i < 2; i++) {
+    games.push([new Game(), false]);
+} 
+
 io.sockets.on('connection', (socket) => {
     // connection confirmation
     socket.on('find_match', () => {
         if (players.indexOf(socket) == -1) {
             players.push(socket);
         }
+    })
+
+    socket.on('end-match', () => {
+        games.find(game => {
+            if (game[0].hasPlayer(socket)) {
+                game[0].remPlayers();
+                game[1] = false;
+                return game;
+            }
+        })
     })
 });
 
@@ -41,14 +55,26 @@ setInterval(() => {
     players.map(player => {
         gamers.push(player);
         if (gamers.length == 2) {
-            games.push([new Game(gamers[0], gamers[1]), true]);
-            gamers[0].emit('new-game');
-            gamers[1].emit('new-game');
-            let index = players.indexOf(gamers[0]);
-            players.splice(index, 1);
-            index = players.indexOf(gamers[1]);
-            players.splice(index, 1);
-            gamers = [];
+            let game = games.find(game => {
+                if (game[1] == false) {
+                    return game;
+                }
+            })
+            if (game) {
+                game[0].addPlayer1(gamers[0]);
+                game[0].addPlayer2(gamers[1]);
+                game[0].setupSockets();
+                game[1] = true;
+                gamers[0].emit('new-game');
+                gamers[1].emit('new-game');
+                let index = players.indexOf(gamers[0]);
+                players.splice(index, 1);
+                index = players.indexOf(gamers[1]);
+                players.splice(index, 1);
+                gamers = [];
+            } else {
+                console.log('no games available')
+            }
         }
     })
     io.emit('online', players.length);

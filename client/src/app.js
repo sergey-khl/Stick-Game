@@ -10,7 +10,6 @@ const app = new Application({
 
 document.body.appendChild(app.view);
 
-
 const Graphics = PIXI.Graphics;
 const Container = PIXI.Container;
 
@@ -19,6 +18,7 @@ let keys = { 'last': '', 'w': false, 'a': false, 's': false, 'd': false, 'punch'
 // scale according to screen of developed on dimensions
 let scalex = window.innerWidth / 2000
 let scaley = window.innerHeight / 1000;
+let socket;
 const ground_width = window.innerWidth;
 const ground_height = window.innerHeight * 2 / 10 ;
 const player_height = window.innerHeight - ground_height - 400;
@@ -75,16 +75,8 @@ class Drawer {
     this.find_match = document.getElementById('find_match');
     
 
-    socket.on("new-game", () => {
-      this.setGameState("game");  
-    });
-
-    socket.on("online", num => {
-      this.find_match.innerText = "Find Match, online: " + String(num);
-    })
-
     // health bars
-    this.health1 = 100;
+    this.health1;
     this.healthContainer1 = new Container();
     app.stage.addChild(this.healthContainer1);
     const health_total1 = new Graphics();
@@ -99,7 +91,7 @@ class Drawer {
 
 
 
-    this.health2 = 100;
+    this.health2;
     this.healthContainer2 = new Container();
     app.stage.addChild(this.healthContainer2);
     const health_total2 = new Graphics();
@@ -190,19 +182,7 @@ class Drawer {
     this.time.position.x = window.innerWidth / 2;
     this.time.position.y = window.innerHeight / 20;
 
-    socket.on("time", (time) => {
-      this.time.text = time.toString(); 
-    });
     app.stage.addChild(this.time);
-
-
-    socket.on("damage", (data) => {
-      if (data[0] == 1) {
-        this.health1 = data[1];
-      } else if (data[0] == 2) {
-        this.health2 = data[1];
-      }     
-    });
 
     this.player1Pos = [window.innerWidth / 3, player_height];
     this.player2Pos = [(window.innerWidth * 2) / 3, player_height];
@@ -223,24 +203,6 @@ class Drawer {
     app.stage.addChild(this.proj2);
     app.stage.addChild(this.hitBox1);
     app.stage.addChild(this.hitBox2);
-
-    socket.on("new-info", (data) => {
-      this.player1Pos[0] = data["player1Info"][0];
-      this.player1Pos[1] = data["player1Info"][1];
-      this.animation1 = data["player1Info"][2];
-      this.player1Left = data["player1Info"][3];
-      this.player2Pos[0] = data["player2Info"][0];
-      this.player2Pos[1] = data["player2Info"][1];
-      this.animation2 = data["player2Info"][2];
-      this.player2Left = data["player2Info"][3];
-      this.attackCollisionPos1 = data["attackCollisionPos1"];
-      this.attackCollisionPos2 = data["attackCollisionPos2"];
-      this.cooldowns = data["cooldowns"];
-    });
-
-    socket.on("game-over", (winner) => {
-      console.log(winner);
-    });
 
     ChromaFilter.prototype = Object.create(PIXI.Filter.prototype);
     ChromaFilter.prototype.constructor = ChromaFilter;
@@ -674,8 +636,20 @@ class Drawer {
 
   switchGameState = () => {
     if (this.gameState == "main_menu") {
+      socket = io();
       this.eraseAll();
       this.find_match.style.display = "block";
+      socket.on("online", num => {
+        this.find_match.innerText = "Find Match, online: " + String(num);
+      })
+      socket.on("new-game", () => {
+        this.setGameState("game");  
+      });
+      socket.off("render")
+      socket.off("game-over")
+      socket.off("time")
+      socket.off("damage")
+      socket.off("new-info")
     } else if (this.gameState == "game") {
       this.eraseAll();
       this.stick1.visible = true;
@@ -688,6 +662,46 @@ class Drawer {
       this.throw_container.visible = true;
       this.sweep_container.visible = true;
       ground.visible = true;
+      this.health1 = 100;
+      this.health2 = 100;
+      // done once a frame so 1/60 sec.
+      socket.on("render", () => {
+        drawer.scale();
+        //drawer.drawHitBoxes();
+        drawer.drawHealth();
+        drawer.drawCooldowns();
+        drawer.drawPlayers();
+      });
+      socket.on("game-over", (winner) => {
+        console.log(winner);
+        socket.emit('end-match');
+        this.setGameState('main_menu');
+      });
+      socket.on("time", (time) => {
+        this.time.text = time.toString(); 
+      });
+      socket.on("damage", (data) => {
+        if (data[0] == 1) {
+          this.health1 = data[1];
+        } else if (data[0] == 2) {
+          this.health2 = data[1];
+        }     
+      });
+      socket.on("new-info", (data) => {
+        this.player1Pos[0] = data["player1Info"][0];
+        this.player1Pos[1] = data["player1Info"][1];
+        this.animation1 = data["player1Info"][2];
+        this.player1Left = data["player1Info"][3];
+        this.player2Pos[0] = data["player2Info"][0];
+        this.player2Pos[1] = data["player2Info"][1];
+        this.animation2 = data["player2Info"][2];
+        this.player2Left = data["player2Info"][3];
+        this.attackCollisionPos1 = data["attackCollisionPos1"];
+        this.attackCollisionPos2 = data["attackCollisionPos2"];
+        this.cooldowns = data["cooldowns"];
+      });
+      socket.off("online")
+      socket.off("new-game")
     }
   }
 
@@ -755,18 +769,7 @@ function ChromaFilter() {
   PIXI.Filter.call(this, vertexShader, fragmentShader);
 }
 
-// initial connection with server
-socket = io();
-const drawer = new Drawer();
-
-// done once a frame so 1/60 sec.
-socket.on("render", () => {
-  drawer.scale();
-  //drawer.drawHitBoxes();
-  drawer.drawHealth();
-  drawer.drawCooldowns();
-  drawer.drawPlayers();
-});
+let drawer = new Drawer();
 
 const find_match = () => {
   socket.emit('find_match', null)

@@ -1,42 +1,53 @@
 import { Player } from "./Player.js";
 
 class Game {
-  constructor(socket1, socket2) {
-    let time = 99;
-    this.socket1 = socket1;
-    this.socket2 = socket2;
-    this.player1 = new Player(2000 / 3, 950);
-    this.player2 = new Player(4000 / 3, 950);
+  constructor() {
+    this.time;
+    this.socket1;
+    this.socket2;
+    this.player1;
+    this.player2;
     this.isGood = true;
 
     // clock
     setInterval(() => {
-      if (time >= 0) {
-        this.socket1.emit('time', time);
-        this.socket2.emit('time', time);
-        time -= 1
+      if (this.socket1 && this.socket2) {
+        if (this.time >= 0) {
+            this.socket1.emit('time', this.time);
+            this.socket2.emit('time', this.time);
+            this.time -= 1
+        } else {
+            if (this.player1.getHealth() > this.player2.getHealth()) {
+              this.socket1.emit('game-over', 1);
+              this.socket2.emit('game-over', 1);
+            } else if (this.player1.getHealth() < this.player2.getHealth()) {
+              this.socket1.emit('game-over', 2);
+              this.socket2.emit('game-over', 2);
+            } else {
+              this.socket1.emit('game-over', 0);
+              this.socket2.emit('game-over', 0);
+            }
+        }
       } else {
-          if (this.player1.getHealth() > this.player2.getHealth()) {
-            this.socket1.emit('game-over', 1);
-            this.socket2.emit('game-over', 1);
-          } else if (this.player1.getHealth() < this.player2.getHealth()) {
-            this.socket1.emit('game-over', 2);
-            this.socket2.emit('game-over', 2);
-          } else {
-            this.socket1.emit('game-over', 0);
-            this.socket2.emit('game-over', 0);
-          }
+        this.time = 3;
       }
     }, 1000);
+    
+  }
 
-    this.socket1.on("action", (data) => {
-      this.player1.setKeys(data["keys"]);
-      this.player1.setDelta(data["delta"]);
-    });
-    this.socket2.on("action", (data) => {
-      this.player2.setKeys(data["keys"]);
-      this.player2.setDelta(data["delta"]);
-    });
+  setupSockets = () => {
+    if (this.socket1 && this.socket2) {
+      this.socket1.on("action", (data) => {
+        this.player1.setKeys(data["keys"]);
+        this.player1.setDelta(data["delta"]);
+      });
+      this.socket2.on("action", (data) => {
+        this.player2.setKeys(data["keys"]);
+        this.player2.setDelta(data["delta"]);
+      });
+    } else {
+      console.log("could not setup sockets");
+    }
   }
 
   // updates the position and movement flags
@@ -70,8 +81,10 @@ class Game {
   };
 
   disconnected = () => {
-    this.socket1.emit('game-over', 3);
-    this.socket2.emit('game-over', 3);
+    if (this.socket1 && this.socket2) {
+      this.socket1.emit('game-over', 3);
+      this.socket2.emit('game-over', 3);
+    }
   }
 
   draw = () => {
@@ -218,7 +231,34 @@ class Game {
   };
 
   getGood = () => {
-    return this.socket1.connected && this.socket2.connected;
+    if (this.socket1 && this.socket2) {
+      return this.socket1.connected && this.socket2.connected;
+    } else {
+      return false;
+    }
+  }
+
+  addPlayer1 = (player) => {
+    this.socket1 = player;
+    this.player1 = new Player(2000 / 3, 950)
+  }
+
+  addPlayer2 = (player) => {
+    this.socket2 = player;
+    this.player2 = new Player(2000 * 2 / 3, 950)
+  }
+
+  remPlayers = () => {
+    this.socket1 = null;
+    this.socket2 = null;
+  }
+
+  hasPlayer = (player) => {
+    if (this.socket1 == player || this.socket2 == player) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }
 
