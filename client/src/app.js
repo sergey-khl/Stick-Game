@@ -682,6 +682,12 @@ class Drawer {
       this.stick2.visible = true;
       this.shuriken1.visible = true;
       this.shuriken2.visible = true;
+      this.healthContainer1.visible = true;
+      this.healthContainer2.visible = true;
+      this.time.visible = true;
+      this.throw_container.visible = true;
+      this.sweep_container.visible = true;
+      ground.visible = true;
     }
   }
 
@@ -690,6 +696,12 @@ class Drawer {
     this.stick2.visible = false;
     this.shuriken1.visible = false;
     this.shuriken2.visible = false;
+    this.healthContainer1.visible = false;
+    this.healthContainer2.visible = false;
+    this.time.visible = false;
+    this.throw_container.visible = false;
+    this.sweep_container.visible = false;
+    ground.visible = false;
     this.find_match.style.display = "none";
   }
 
