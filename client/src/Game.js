@@ -29,7 +29,7 @@ class Game {
             }
         }
       } else {
-        this.time = 3;
+        this.time = 99;
       }
     }, 1000);
     

@@ -73,7 +73,7 @@ class Drawer {
     // local game state
     this.gameState = '';
     this.find_match = document.getElementById('find_match');
-    
+    this.looking = false;
 
     // health bars
     this.health1;
@@ -640,7 +640,11 @@ class Drawer {
       this.eraseAll();
       this.find_match.style.display = "block";
       socket.on("online", num => {
-        this.find_match.innerText = "Find Match, online: " + String(num);
+        if (!this.looking) {
+          this.find_match.innerText = "Find Match, online: " + String(num);
+        } else {
+          this.find_match.innerText = "in queue";
+        }
       })
       socket.on("new-game", () => {
         this.setGameState("game");  
@@ -661,6 +665,7 @@ class Drawer {
       this.time.visible = true;
       this.throw_container.visible = true;
       this.sweep_container.visible = true;
+      this.setLooking(false);
       ground.visible = true;
       this.health1 = 100;
       this.health2 = 100;
@@ -723,6 +728,10 @@ class Drawer {
     this.gameState = gameState;
     this.switchGameState();
   }
+
+  setLooking = (looking) => {
+    this.looking = looking;
+  }
 }
 
 // add ground to screen
@@ -773,6 +782,7 @@ let drawer = new Drawer();
 
 const find_match = () => {
   socket.emit('find_match', null)
+  drawer.setLooking(true);
 }
 
 document.addEventListener("keydown", keyDown);
