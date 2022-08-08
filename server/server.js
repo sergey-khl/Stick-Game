@@ -32,9 +32,16 @@ for (let i = 0; i < 2; i++) {
 
 io.sockets.on('connection', (socket) => {
     // connection confirmation
-    socket.on('find_match', () => {
+    socket.on('find-match', () => {
         if (players.indexOf(socket) == -1) {
             players.push(socket);
+        }
+    })
+
+    socket.on('stop-looking', () => {
+        let index = players.indexOf(socket);
+        if (index != -1) {
+            players.splice(index, 1);
         }
     })
 

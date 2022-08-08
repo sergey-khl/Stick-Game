@@ -752,6 +752,10 @@ class Drawer {
   setLooking = (looking) => {
     this.looking = looking;
   }
+
+  getLooking = () => {
+    return this.looking;
+  }
 }
 
 
@@ -788,8 +792,13 @@ function ChromaFilter() {
 let drawer = new Drawer();
 
 const find_match = () => {
-  socket.emit('find_match', null)
-  drawer.setLooking(true);
+  if (drawer.getLooking()) {
+    socket.emit('stop-looking');
+    drawer.setLooking(false);
+  } else {
+    socket.emit('find-match');
+    drawer.setLooking(true);
+  }
 }
 
 document.addEventListener("keydown", keyDown);

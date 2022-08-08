@@ -201,7 +201,6 @@ class Player {
 
       // basic movement
       if (!this.attacking) {
-        
         this.crouching = false;
         if (this.keys['d'] && this.keys['last'] == 'd') {
           this.animation = 'walk';
@@ -235,7 +234,7 @@ class Player {
           this.animation = 'jump';
           this.jumping = true;
           this.crouching = false;
-          this.velocity[1] = -50;
+          this.velocity[1] = -47;
         }
 
         // jumping
