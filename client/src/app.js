@@ -70,10 +70,28 @@ const contextClick = (e) => {
 
 class Drawer {
   constructor() {
+    // html stuff
+    this.find_match = document.getElementById('find_match');
+    this.title = document.getElementById('title');
+    this.help = document.getElementById('help');
+
     // local game state
     this.gameState = '';
-    this.find_match = document.getElementById('find_match');
     this.looking = false;
+
+    // background
+    this.paper = new PIXI.Sprite(PIXI.Texture.from(`src/background/paper.png`));
+    this.paper.width = window.innerWidth;
+    this.paper.height = window.innerHeight;
+    app.stage.addChild(this.paper);
+
+    // add ground to screen
+    this.ground = new PIXI.Sprite(PIXI.Texture.from(`src/background/ground.png`));  
+    this.ground.y = window.innerHeight - ground_height;
+    this.ground.width = ground_width;
+    this.ground.height = ground_height;
+    app.stage.addChild(this.ground);
+    
 
     // health bars
     this.health1;
@@ -88,8 +106,6 @@ class Drawer {
     health_total1
       .beginFill(0xff0000)
       .drawRect(0, 0, (window.innerWidth / 2 - window.innerWidth / 10), window.innerHeight / 20); // player 
-
-
 
     this.health2;
     this.healthContainer2 = new Container();
@@ -639,6 +655,8 @@ class Drawer {
       socket = io();
       this.eraseAll();
       this.find_match.style.display = "block";
+      this.title.style.display = "block";
+      this.help.style.display = "block";
       socket.on("online", num => {
         if (!this.looking) {
           this.find_match.innerText = "Find Match, online: " + String(num);
@@ -666,7 +684,7 @@ class Drawer {
       this.throw_container.visible = true;
       this.sweep_container.visible = true;
       this.setLooking(false);
-      ground.visible = true;
+      this.ground.visible = true;
       this.health1 = 100;
       this.health2 = 100;
       // done once a frame so 1/60 sec.
@@ -720,8 +738,10 @@ class Drawer {
     this.time.visible = false;
     this.throw_container.visible = false;
     this.sweep_container.visible = false;
-    ground.visible = false;
+    this.ground.visible = false;
     this.find_match.style.display = "none";
+    this.title.style.display = "none";
+    this.help.style.display = "none";
   }
 
   setGameState = (gameState) => {
@@ -734,19 +754,6 @@ class Drawer {
   }
 }
 
-// add ground to screen
-const ground = new Graphics();  
-ground
-  .beginFill(0x964b00)
-  .drawRect(
-    0,
-    window.innerHeight - ground_height,
-    ground_width,
-    ground_height * 2
-  )
-  .endFill();
-
-app.stage.addChild(ground);
 
 // remove white background from animations
 function ChromaFilter() {

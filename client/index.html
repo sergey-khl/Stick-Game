@@ -4,12 +4,19 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STICK</title>
+    <title>STICK GAME</title>
 
     <link rel="stylesheet" href="src/style.css">
 </head>
 <body>
+    <h1 id="title">Stick Game</h1>
     <button type="button" class="btn" id="find_match" onClick="find_match()">Find Match, online: 0</button>
+    <ul id="help">
+        <li>punch - left click</li>
+        <li>kick - right click</li>
+        <li>throw - q</li>
+        <li>sweep - e</li>
+      </ul>
     <script src="https://pixijs.download/v6.5.0-rc.2/pixi.js"></script>
     <script src="http://localhost:8080/socket.io/socket.io.js"></script>
     <script type="module" src="src/Player.js"></script>
