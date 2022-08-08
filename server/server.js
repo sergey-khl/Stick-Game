@@ -43,6 +43,13 @@ io.sockets.on('connection', (socket) => {
         }
     })
 
+    socket.on('disconnect', () => {
+        let index = players.indexOf(socket);
+        if (index != -1) {
+            players.splice(index, 1);
+        }
+    })
+
     socket.on('end-match', () => {
         games.find(game => {
             if (game[0].hasPlayer(socket)) {
