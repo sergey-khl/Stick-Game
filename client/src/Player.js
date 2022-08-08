@@ -62,7 +62,10 @@ class Player {
     if (this.knockback != '') { // we are being knocked back
       this.frame_count += 1;
       if (this.knockback == 'punch') {
-        if (this.frame_count <= 21) {
+        if (this.frame_count == 1) {
+          this.velocity[0] = 0;
+          this.animation = 'stun_stand';
+        } else if (this.frame_count <= 21) {
           this.velocity[0] = this.left ? 10 : -10;
         } else {
           this.velocity[0] = 0;
@@ -70,7 +73,10 @@ class Player {
           this.setKnockback('', false);
         }
       } else if (this.knockback == 'kick') {
-        if (this.frame_count <= 24) {
+        if (this.frame_count == 1) {
+          this.velocity[0] = 0;
+          this.animation = 'stun_stand';
+        } else if (this.frame_count <= 24) {
           this.velocity[0] = this.left ? 15 : -15;
         } else {
           this.velocity[0] = 0;
@@ -78,7 +84,10 @@ class Player {
           this.setKnockback('', false);
         }
       } else if (this.knockback == 'throw_shurikens') {
-        if (this.frame_count <= 12) {
+        if (this.frame_count == 1) {
+          this.velocity[0] = 0;
+          this.animation = 'stun_stand';
+        } else if (this.frame_count <= 12) {
           this.velocity[0] = this.left ? 2 : -2;
         } else {
           this.velocity[0] = 0;

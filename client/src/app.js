@@ -325,6 +325,10 @@ class Drawer {
     this.stun_fall_textures = []; // 1.0
     const texture_stun_fall = PIXI.Texture.from(`src/stun/fall.png`);
     this.stun_fall_textures.push(texture_stun_fall);
+    //stand stunned
+    this.stun_stand_textures = []; // 1.0
+    const texture_stun_stand = PIXI.Texture.from(`src/stun/stand.png`);
+    this.stun_stand_textures.push(texture_stun_stand);
     //punch
     this.punch_textures = [];
     for (let i = 0; i <= 9; i++) {
@@ -548,6 +552,13 @@ class Drawer {
           this.stick1.animationSpeed = 1.0;
         }
         break;
+      case "stun_stand":
+        if (this.curranimation1 != this.animation1) {
+          this.curranimation1 = this.animation1;
+          this.stick1.textures = this.stun_stand_textures;
+          this.stick1.animationSpeed = 1.0;
+        }
+        break;
       case "punch":
         if (this.curranimation1 != this.animation1) {
           this.curranimation1 = this.animation1;
@@ -626,6 +637,13 @@ class Drawer {
         if (this.curranimation2 != this.animation2) {
           this.curranimation2 = this.animation2;
           this.stick2.textures = this.stun_fall_textures;
+          this.stick2.animationSpeed = 1.0;
+        }
+        break;
+      case "stun_stand":
+        if (this.curranimation2 != this.animation2) {
+          this.curranimation2 = this.animation2;
+          this.stick2.textures = this.stun_stand_textures;
           this.stick2.animationSpeed = 1.0;
         }
         break;
