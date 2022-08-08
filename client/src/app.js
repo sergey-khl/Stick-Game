@@ -82,6 +82,7 @@ class Drawer {
     this.find_match = document.getElementById('find_match');
     this.title = document.getElementById('title');
     this.help = document.getElementById('help');
+    this.info = document.getElementById('info');
 
     // local game state
     this.gameState = '';
@@ -196,7 +197,7 @@ class Drawer {
     sweep_c_grey.mask = this.sweep_c_overlay;
 
     //time
-    this.time = new PIXI.Text("9", {
+    this.time = new PIXI.Text("20", {
       fill: "#333333",
       fontSize: 40,
       fontWeight: "bold",
@@ -208,8 +209,8 @@ class Drawer {
 
     app.stage.addChild(this.time);
 
-    this.player1Pos = [window.innerWidth / 3, player_height];
-    this.player2Pos = [(window.innerWidth * 2) / 3, player_height];
+    this.player1Pos = [window.innerWidth / 3, player_height, 250, 400];
+    this.player2Pos = [(window.innerWidth * 2) / 3, player_height, 250, 400];
     this.player1Left = false;
     this.player2Left = true;
     this.animation1 = "idle";
@@ -366,8 +367,12 @@ class Drawer {
   scale = () => {
     this.player1Pos[0] *= scalex;
     this.player1Pos[1] *= scaley;
+    this.player1Pos[2] *= scalex;
+    this.player1Pos[3] *= scaley;
     this.player2Pos[0] *= scalex;
     this.player2Pos[1] *= scaley;
+    this.player2Pos[2] *= scalex;
+    this.player2Pos[3] *= scaley;
     if (this.attackCollisionPos1) {
       let alive = false;
       for (let i = 0; i < this.attackCollisionPos1.length; i++) {
@@ -466,18 +471,24 @@ class Drawer {
     
     if (this.attackCollisionPos1) {
       for (let i = 0; i < this.attackCollisionPos1.length; i++) {
-        this.hitBox1.x = this.attackCollisionPos1[i][0];
-        this.hitBox1.y = this.attackCollisionPos1[i][1];
-        this.hitBox1.beginFill(0x00ff00).drawRect(0, 0, this.attackCollisionPos1[i][2], this.attackCollisionPos1[i][3]).endFill();
+        this.proj1.x = this.attackCollisionPos1[i][0];
+        this.proj1.y = this.attackCollisionPos1[i][1];
+        this.proj1.beginFill(0x00ff00).drawRect(0, 0, this.attackCollisionPos1[i][2], this.attackCollisionPos1[i][3]).endFill();
       }
     }
     if (this.attackCollisionPos2) {
       for (let i = 0; i < this.attackCollisionPos2.length; i++) {
-        this.hitBox2.x = this.attackCollisionPos2[i][0];
-        this.hitBox2.y = this.attackCollisionPos2[i][1];
-        this.hitBox2.beginFill(0x00ff00).drawRect(0, 0, this.attackCollisionPos2[i][2], this.attackCollisionPos2[i][3]).endFill();
+        this.proj2.x = this.attackCollisionPos2[i][0];
+        this.proj2.y = this.attackCollisionPos2[i][1];
+        this.proj2.beginFill(0x00ff00).drawRect(0, 0, this.attackCollisionPos2[i][2], this.attackCollisionPos2[i][3]).endFill();
       }
     }
+    // if (this.player1Pos) {
+    //   this.hitBox1.beginFill(0x00ff00).drawRect(this.player1Pos[0] - this.player1Pos[2] / 3, this.player1Pos[1] - this.player1Pos[3], this.player1Pos[2] / 1.5, this.player1Pos[3]).endFill();
+    // }
+    // if (this.player2Pos) {
+    //   this.hitBox2.beginFill(0x00ff00).drawRect(this.player2Pos[0] - this.player2Pos[2] / 3, this.player2Pos[1] - this.player2Pos[3], this.player2Pos[2] / 1.5, this.player2Pos[3]).endFill();
+    // }
   };
 
   animate = () => {
@@ -665,6 +676,7 @@ class Drawer {
       this.find_match.style.display = "block";
       this.title.style.display = "block";
       this.help.style.display = "block";
+      this.info.style.display = "block";
       socket.on("online", num => {
         if (!this.looking) {
           this.find_match.innerText = "Find Match, online: " + String(num);
@@ -698,8 +710,8 @@ class Drawer {
       // done once a frame so 1/60 sec.
       socket.on("render", () => {
         drawer.scale();
-        //drawer.drawHitBoxes();
-        drawer.drawHealth();
+        drawer.drawHitBoxes();
+        // drawer.drawHealth();
         drawer.drawCooldowns();
         drawer.drawPlayers();
       });
@@ -721,10 +733,14 @@ class Drawer {
       socket.on("new-info", (data) => {
         this.player1Pos[0] = data["player1Info"][0];
         this.player1Pos[1] = data["player1Info"][1];
+        this.player1Pos[2] = data["player1Info"][4];
+        this.player1Pos[3] = data["player1Info"][5];
         this.animation1 = data["player1Info"][2];
         this.player1Left = data["player1Info"][3];
         this.player2Pos[0] = data["player2Info"][0];
         this.player2Pos[1] = data["player2Info"][1];
+        this.player2Pos[2] = data["player2Info"][3];
+        this.player2Pos[3] = data["player2Info"][5];
         this.animation2 = data["player2Info"][2];
         this.player2Left = data["player2Info"][3];
         this.attackCollisionPos1 = data["attackCollisionPos1"];
@@ -750,6 +766,7 @@ class Drawer {
     this.find_match.style.display = "none";
     this.title.style.display = "none";
     this.help.style.display = "none";
+    this.info.style.display = "none";
   }
 
   setGameState = (gameState) => {

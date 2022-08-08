@@ -28,6 +28,18 @@ body {
     transform: translate(-50%, -50%);
 }
 
+#info {
+    margin: 0;
+    position: absolute;
+    display: inline-block;
+    justify-content: center;
+    text-align: center;
+    top: 90%;
+    left: 50%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
 .btn {
     margin: 0;
     position: absolute;

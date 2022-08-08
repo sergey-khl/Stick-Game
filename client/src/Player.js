@@ -89,7 +89,7 @@ class Player {
         if (this.frame_count == 1) {
           this.velocity[0] = 0;
           this.animation = 'stun_fall';
-        } else if (this.frame_count >= 31) {
+        } else if (this.frame_count >= 61) {
           this.frame_count = 0;
           this.setKnockback('', false);
         }
@@ -243,6 +243,15 @@ class Player {
         }
       }
     }
+    // change dimensions if necessary
+    if (this.animation == 'stun_fall') {
+      this.width = 450;
+      this.height = 100;
+    } else {
+      this.width = 250;
+      this.height = 400;
+    }
+    // gravity
     if (this.position[1] <= this.standing_height) {
       this.acceleration[1] = 2.5;
     } else {
@@ -285,7 +294,7 @@ class Player {
   };
 
   getInfo = () => {
-    return [this.position[0], this.position[1], this.animation, this.left];
+    return [this.position[0], this.position[1], this.animation, this.left, this.width, this.height];
   };
 
   getCooldowns = () => {
