@@ -21,7 +21,7 @@ class Player {
     this.collidingLeft = false;
     this.collidingRight = false;
     this.knockback = '';
-    this.cooldowns = { 'throw_shurikens': 0, 'throw_shurikens_max': 5, 'sweep': 0, 'sweep_max': 5, 'punch': 0, 'kick': 0 };
+    this.cooldowns = { 'throw_shurikens': 0, 'throw_shurikens_max': 1, 'sweep': 0, 'sweep_max': 2, 'punch': 0, 'kick': 0 };
 
     this.attackCollisionPos = [];
   }
@@ -63,7 +63,7 @@ class Player {
       this.frame_count += 1;
       if (this.knockback == 'punch') {
         if (this.frame_count <= 21) {
-          this.velocity[0] = this.left ? 4 : -4;
+          this.velocity[0] = this.left ? 10 : -10;
         } else {
           this.velocity[0] = 0;
           this.frame_count = 0;
@@ -71,7 +71,7 @@ class Player {
         }
       } else if (this.knockback == 'kick') {
         if (this.frame_count <= 24) {
-          this.velocity[0] = this.left ? 5 : -5;
+          this.velocity[0] = this.left ? 15 : -15;
         } else {
           this.velocity[0] = 0;
           this.frame_count = 0;
@@ -106,7 +106,7 @@ class Player {
               this.position[1] - 300,
               (this.left ? -150 : 150),
               70,
-              5,
+              10,
               'punch'
             );
           } else if (this.frame_count == 17) {
@@ -125,7 +125,7 @@ class Player {
               this.position[1] - 240,
               (this.left ? -200 : 200),
               70,
-              8,
+              15,
               'kick'
             );
           } else if (this.frame_count == 30) {
@@ -143,7 +143,7 @@ class Player {
               this.position[1] - 170 + 25,
               (this.left ? -50 : 50),
               50,
-              2,
+              10,
               'throw_shurikens'
             );
           } else if (this.frame_count >= 23) {
@@ -158,7 +158,7 @@ class Player {
               this.position[1] - 150,
               (this.left ? -170 : 170),
               150,
-              10,
+              15,
               'sweep'
             );
           } else if (this.frame_count == 32) {
@@ -186,13 +186,13 @@ class Player {
         this.animation = 'kick';
         this.velocity[0] = this.left ? -10 : 10;
       } else if (this.keys['throw'] && !this.attacking && !this.jumping && this.cooldowns['throw_shurikens'] == 0) {
-        this.cooldowns['throw_shurikens'] = 5;
+        this.cooldowns['throw_shurikens'] = this.cooldowns['throw_shurikens_max'];
         this.attacking = true;
         this.crouching = false;
         this.animation = 'throw_shurikens';
         this.velocity[0] = 0;
       } else if (this.keys['sweep'] && !this.attacking && !this.jumping && this.cooldowns['sweep'] == 0) {
-        this.cooldowns['sweep'] = 5;
+        this.cooldowns['sweep'] = this.cooldowns['sweep_max'];
         this.attacking = true;
         this.crouching = false;
         this.animation = 'sweep';

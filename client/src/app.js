@@ -34,6 +34,10 @@ const keyDown = (e) => {
     keys['throw'] = true;
   } else if (e.key == 'e') {
     keys['sweep'] = true;
+  } else if (e.key == 'h') {
+    keys['punch'] = true;
+  } else if (e.key == 'j') {
+    keys['kick'] = true;
   }
 };
 
@@ -45,6 +49,10 @@ const keyUp = (e) => {
     keys['throw'] = false;
   } else if (e.key == 'e') {
     keys['sweep'] = false;
+  } else if (e.key == 'h') {
+    keys['punch'] = false;
+  } else if (e.key == 'j') {
+    keys['kick'] = false;
   }
 };
 
