@@ -14,10 +14,8 @@ app.get('/', (req, res) => {
     });
 });
 app.use(express.static(path.join(__dirname, '/../client')));
-const PORT = 8080;
+const PORT = process.env.NODE_ENV == 'production' ? 80 : 8080;
 const FPS = 60;
-
-app.set('port', PORT);
 
 const server = createServer(app);
 let io = new Server(server);
@@ -115,4 +113,5 @@ server.on('error', (err) => {
 server.listen(PORT, () => {
     console.log(`server on port ${PORT} is ready!!`);
 });
+
 
