@@ -19,14 +19,14 @@ class Game {
             this.time -= 1
         } else {
             if (this.player1.getHealth() > this.player2.getHealth()) {
-              this.socket1.emit('game-over', 1);
-              this.socket2.emit('game-over', 1);
+              this.socket1.emit('game-over', true);
+              this.socket2.emit('game-over', false);
             } else if (this.player1.getHealth() < this.player2.getHealth()) {
-              this.socket1.emit('game-over', 2);
-              this.socket2.emit('game-over', 2);
+              this.socket1.emit('game-over', false);
+              this.socket2.emit('game-over', true);
             } else {
-              this.socket1.emit('game-over', 0);
-              this.socket2.emit('game-over', 0);
+              this.socket1.emit('game-over', false);
+              this.socket2.emit('game-over', false);
             }
         }
       } else {
@@ -83,21 +83,21 @@ class Game {
 
   disconnected = () => {
     if (this.socket1 && this.socket2) {
-      this.socket1.emit('game-over', 3);
-      this.socket2.emit('game-over', 3);
+      this.socket1.emit('game-over', true);
+      this.socket2.emit('game-over', true);
     }
   }
 
   draw = () => {
     if (this.player1.getHealth() == 0 && this.player2.getHealth() == 0) {
-      this.socket1.emit('game-over', 0);
-      this.socket2.emit('game-over', 0);
+      this.socket1.emit('game-over', false);
+      this.socket2.emit('game-over', false);
     } else if (this.player1.getHealth() <= 0) {
-      this.socket1.emit('game-over', 2);
-      this.socket2.emit('game-over', 2);
+      this.socket1.emit('game-over', false);
+      this.socket2.emit('game-over', true);
     } else if (this.player2.getHealth() <= 0) {
-      this.socket1.emit('game-over', 1);
-      this.socket2.emit('game-over', 1);
+      this.socket1.emit('game-over', true);
+      this.socket2.emit('game-over', false);
     }
     this.socket1.emit("render");
     this.socket2.emit("render");

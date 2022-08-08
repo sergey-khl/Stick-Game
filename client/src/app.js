@@ -23,6 +23,9 @@ const ground_width = window.innerWidth;
 const ground_height = window.innerHeight * 2 / 10 ;
 const player_height = window.innerHeight - ground_height - 400;
 
+let wins = 0;
+let losses = 0;
+
 const keyDown = (e) => {
   keys[e.key] = true;
   if (e.key == 'a' || e.key == 'd') {
@@ -83,6 +86,9 @@ class Drawer {
     this.title = document.getElementById('title');
     this.help = document.getElementById('help');
     this.info = document.getElementById('info');
+    this.wins = document.getElementById('wins');
+    this.losses = document.getElementById('losses');
+    this.games = document.getElementById('games');
 
     // local game state
     this.gameState = '';
@@ -317,7 +323,7 @@ class Drawer {
     this.block_c_textures.push(texture_block_c);
     //fall stunned
     this.stun_fall_textures = []; // 1.0
-    const texture_stun_fall = PIXI.Texture.from(`src/stun_fall/stun_fall_0000.png`);
+    const texture_stun_fall = PIXI.Texture.from(`src/stun/fall.png`);
     this.stun_fall_textures.push(texture_stun_fall);
     //punch
     this.punch_textures = [];
@@ -677,6 +683,9 @@ class Drawer {
       this.title.style.display = "block";
       this.help.style.display = "block";
       this.info.style.display = "block";
+      this.wins.style.display = "block";
+      this.losses.style.display = "block";
+      this.games.style.display = "block";
       socket.on("online", num => {
         if (!this.looking) {
           this.find_match.innerText = "Find Match, online: " + String(num);
@@ -710,13 +719,21 @@ class Drawer {
       // done once a frame so 1/60 sec.
       socket.on("render", () => {
         drawer.scale();
-        drawer.drawHitBoxes();
-        // drawer.drawHealth();
+        //drawer.drawHitBoxes();
+        drawer.drawHealth();
         drawer.drawCooldowns();
         drawer.drawPlayers();
       });
       socket.on("game-over", (winner) => {
-        console.log(winner);
+        if (winner) {
+          wins += 1
+        } else {
+          losses += 1
+        }
+        this.wins.innerText = "wins - " + String(wins);
+        this.losses.innerText = "losses - " + String(losses);
+        this.games.innerText = "games - " + String(wins + losses); 
+        
         socket.emit('end-match');
         this.setGameState('main_menu');
       });
@@ -767,6 +784,9 @@ class Drawer {
     this.title.style.display = "none";
     this.help.style.display = "none";
     this.info.style.display = "none";
+    this.wins.style.display = "none";
+    this.losses.style.display = "none";
+    this.games.style.display = "none";
   }
 
   setGameState = (gameState) => {

@@ -4,6 +4,7 @@ body {
     margin:0;
     padding:0;
     overflow:hidden;
+    position: relative;
 }
 
 #title {
@@ -13,6 +14,16 @@ body {
     justify-content: center;
     text-align: center;
     top: 25%;
+    left: 50%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+#stats {
+    margin: 0;
+    position: absolute;
+    display: inline-block;
+    top: 35%;
     left: 50%;
     -ms-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
