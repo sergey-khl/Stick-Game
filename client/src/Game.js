@@ -118,7 +118,10 @@ class Game {
   checkPlayerCollision = () => {
     const player1Pos = this.player1.getInfo();
     const player2Pos = this.player2.getInfo();
-    let colliding = false;
+    let colliding1Left = false;
+    let colliding1Right = false;
+    let colliding2Left = false;
+    let colliding2Right = false;
     if (
       // collide with each other
       player1Pos[0] + 90 >= player2Pos[0] - 90 &&
@@ -127,37 +130,54 @@ class Game {
       player1Pos[1] + 300 >= player2Pos[1]
     ) {
       if (!player1Pos[3] && player2Pos[3]) {
-        this.player1.setCollide("right");
-        this.player2.setCollide("left");
-        colliding = true;
+        colliding1Right = true;
+        colliding2Left = true;
       } else if (player1Pos[3] && !player2Pos[3]) {
-        this.player1.setCollide("left");
-        this.player2.setCollide("right");
-        colliding = true;
+        colliding2Right = true;
+        colliding1Left = true;
       }
     }
 
     if (player2Pos[0] + 95 >= 2000 && player2Pos[3]) {
       // collide with wall
-      colliding = true;
-      this.player2.setCollide("right");
-    } else if (player1Pos[0] + 95 >= 2000 && player1Pos[3]) {
+      colliding2Right = true;
+    }
+    if (player1Pos[0] + 95 >= 2000 && player1Pos[3]) {
       // collide with wall
-      colliding = true;
-      this.player1.setCollide("right");
-    } else if (player2Pos[0] - 95 <= 0 && !player2Pos[3]) {
+      colliding1Right = true;
+    }
+    if (player2Pos[0] - 95 <= 0 && !player2Pos[3]) {
       // collide with wall
-      colliding = true;
-      this.player2.setCollide("left");
-    } else if (player1Pos[0] - 95 <= 0 && !player1Pos[3]) {
+      colliding2Left = true;
+    }
+    if (player1Pos[0] - 95 <= 0 && !player1Pos[3]) {
       // collide with wall
-      colliding = true;
-      this.player1.setCollide("left");
+      colliding1Left = true;
     }
 
-    if (!colliding) {
-      this.player1.setCollide("none");
-      this.player2.setCollide("none");
+    if (colliding1Left) {
+      this.player1.setCollide("left");
+    }
+    if (colliding1Right) {
+      this.player1.setCollide("right");
+    }
+    if (colliding2Left) {
+      this.player2.setCollide("left");
+    }
+    if (colliding2Right) {
+      this.player2.setCollide("right");
+    }
+    if (!colliding1Left) {
+      this.player1.setCollide("nLeft");
+    }
+    if (!colliding1Right) {
+      this.player1.setCollide("nRight");
+    }
+    if (!colliding2Left) {
+      this.player2.setCollide("nLeft");
+    }
+    if (!colliding2Right) {
+      this.player2.setCollide("nRight");
     }
   };
 

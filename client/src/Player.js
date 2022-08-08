@@ -1,5 +1,3 @@
-import { Socket } from "socket.io";
-
 class Player {
   constructor(initx, inity) {
     this.health = 100;
@@ -253,7 +251,6 @@ class Player {
       this.jumping = false;
       this.position[1] = this.standing_height;
     }
-
     // deny movement if collision
     if (this.collidingLeft && this.velocity[0] < 0) {
       this.velocity[0] = 0;
@@ -311,8 +308,9 @@ class Player {
       this.collidingLeft = true;
     } else if (collision == "right") {
       this.collidingRight = true;
-    } else if (collision == "none") {
+    } else if (collision == "nLeft") {
       this.collidingLeft = false;
+    } else if (collision == "nRight") {
       this.collidingRight = false;
     }
   };

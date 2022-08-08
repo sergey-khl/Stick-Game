@@ -188,7 +188,7 @@ class Drawer {
     sweep_c_grey.mask = this.sweep_c_overlay;
 
     //time
-    this.time = new PIXI.Text("99", {
+    this.time = new PIXI.Text("9", {
       fill: "#333333",
       fontSize: 40,
       fontWeight: "bold",
@@ -661,7 +661,7 @@ class Drawer {
         if (!this.looking) {
           this.find_match.innerText = "Find Match, online: " + String(num);
         } else {
-          this.find_match.innerText = "in queue";
+          this.find_match.innerText = "in queue, online: " + String(num);
         }
       })
       socket.on("new-game", () => {
