@@ -277,21 +277,35 @@ class Drawer {
       const texture = PIXI.Texture.from(`src/shuriken/shuriken_000${i}.png`);
       this.shuriken_textures.push(texture);
     }
-    // add shuriken animation 
-    this.shuriken1 = new PIXI.AnimatedSprite(this.shuriken_textures);
-    this.shuriken1.animationSpeed = 0.2;
-    this.shuriken1.width = 50 * scalex;
-    this.shuriken1.height = 50 * scaley;
-    this.shuriken1.filters = [this.filter];
-    this.shuriken2 = new PIXI.AnimatedSprite(this.shuriken_textures);
-    this.proj_alive1 = false;
-    this.shuriken2.animationSpeed = 0.2;
-    this.shuriken2.width = 50 * scalex;
-    this.shuriken2.height = 50  * scaley;
-    this.shuriken2.filters = [this.filter];
-    this.proj_alive2 = false;
-    app.stage.addChild(this.shuriken1);
-    app.stage.addChild(this.shuriken2);
+    // add 2 shuriken animation per player 
+    this.shuriken1a = new PIXI.AnimatedSprite(this.shuriken_textures);
+    this.shuriken1a.animationSpeed = 0.2;
+    this.shuriken1a.width = 50 * scalex;
+    this.shuriken1a.height = 50 * scaley;
+    this.shuriken1a.filters = [this.filter];
+    this.shuriken2a = new PIXI.AnimatedSprite(this.shuriken_textures);
+    this.proj_alive1a = false;
+    this.shuriken2a.animationSpeed = 0.2;
+    this.shuriken2a.width = 50 * scalex;
+    this.shuriken2a.height = 50  * scaley;
+    this.shuriken2a.filters = [this.filter];
+    this.proj_alive2a = false;
+    app.stage.addChild(this.shuriken1a);
+    app.stage.addChild(this.shuriken2a);
+    this.shuriken1b = new PIXI.AnimatedSprite(this.shuriken_textures);
+    this.shuriken1b.animationSpeed = 0.2;
+    this.shuriken1b.width = 50 * scalex;
+    this.shuriken1b.height = 50 * scaley;
+    this.shuriken1b.filters = [this.filter];
+    this.shuriken2b = new PIXI.AnimatedSprite(this.shuriken_textures);
+    this.proj_alive1b = false;
+    this.shuriken2b.animationSpeed = 0.2;
+    this.shuriken2b.width = 50 * scalex;
+    this.shuriken2b.height = 50  * scaley;
+    this.shuriken2b.filters = [this.filter];
+    this.proj_alive2b = false;
+    app.stage.addChild(this.shuriken1b);
+    app.stage.addChild(this.shuriken2b);
 
     //walk
     this.walk_textures = []; // 0.3
@@ -384,30 +398,42 @@ class Drawer {
     this.player2Pos[2] *= scalex;
     this.player2Pos[3] *= scaley;
     if (this.attackCollisionPos1) {
-      let alive = false;
+      let alive1 = false;
+      let alive2 = false;
       for (let i = 0; i < this.attackCollisionPos1.length; i++) {
         if (this.attackCollisionPos1[i][5] == 'throw_shurikens') {
-          alive = true;
+          if (!alive1) {
+            alive1 = true;
+          } else if (!alive2) {
+            alive2 = true;
+          }
         }
         this.attackCollisionPos1[i][0] *= scalex;
         this.attackCollisionPos1[i][1] *= scaley;
         this.attackCollisionPos1[i][2] *= scalex;
         this.attackCollisionPos1[i][3] *= scaley;
       }
-      this.proj_alive1 = alive;
+      this.proj_alive1a = alive1;
+      this.proj_alive1b = alive2;
     }
     if (this.attackCollisionPos2) {
-      let alive = false;
+      let alive1 = false;
+      let alive2 = false;
       for (let i = 0; i < this.attackCollisionPos2.length; i++) {
         if (this.attackCollisionPos2[i][5] == 'throw_shurikens') {
-          alive = true;
+          if (!alive1) {
+            alive1 = true;
+          } else if (!alive2) {
+            alive2 = true;
+          }
         }
         this.attackCollisionPos2[i][0] *= scalex;
         this.attackCollisionPos2[i][1] *= scaley;
         this.attackCollisionPos2[i][2] *= scalex;
         this.attackCollisionPos2[i][3] *= scaley;
       }
-      this.proj_alive2 = alive;
+      this.proj_alive2a = alive1;
+      this.proj_alive2b = alive2;
     }
   }
 
@@ -446,26 +472,42 @@ class Drawer {
     this.stick1.y = this.player1Pos[1];
     this.stick2.x = this.player2Pos[0];
     this.stick2.y = this.player2Pos[1];
+    let second = false;
     for (let i = 0; i < this.attackCollisionPos1.length; i++) {
       if (this.attackCollisionPos1[i][5] == 'throw_shurikens') {
-        this.shuriken1.x = this.attackCollisionPos1[i][0];
-        this.shuriken1.y = this.attackCollisionPos1[i][1];
+        if (second) {
+          this.shuriken1b.x = this.attackCollisionPos1[i][0];
+          this.shuriken1b.y = this.attackCollisionPos1[i][1];
+        } else {
+          this.shuriken1a.x = this.attackCollisionPos1[i][0];
+          this.shuriken1a.y = this.attackCollisionPos1[i][1];
+        }
+        this.second = true;
       }
     }
+    second = false;
     for (let i = 0; i < this.attackCollisionPos2.length; i++) {
       if (this.attackCollisionPos2[i][5] == 'throw_shurikens') {
-        this.shuriken2.x = this.attackCollisionPos2[i][0];
-        this.shuriken2.y = this.attackCollisionPos2[i][1];
+        if (second) {
+          this.shuriken2b.x = this.attackCollisionPos2[i][0];
+          this.shuriken2b.y = this.attackCollisionPos2[i][1];
+        } else {
+          this.shuriken2a.x = this.attackCollisionPos2[i][0];
+          this.shuriken2a.y = this.attackCollisionPos2[i][1];
+        }
+        second = true;
       }
     }
 
     if ((this.stick1.scale.x > 0 && this.player1Left) || (this.stick1.scale.x < 0 && !this.player1Left)) {
       this.stick1.scale.x *= -1;
-      this.shuriken1.scale.x *= -1;
+      this.shuriken1a.scale.x *= -1;
+      this.shuriken1b.scale.x *= -1;
     }
     if ((this.stick2.scale.x > 0 && this.player2Left) || (this.stick2.scale.x < 0 && !this.player2Left)) {
       this.stick2.scale.x *= -1;
-      this.shuriken2.scale.x *= -1;
+      this.shuriken2a.scale.x *= -1;
+      this.shuriken2b.scale.x *= -1;
     }
 
     this.animate();
@@ -678,18 +720,32 @@ class Drawer {
     }
     this.stick2.play();
 
-    if (this.proj_alive1) {
-      this.shuriken1.visible = true;
-      this.shuriken1.play();
+    if (this.proj_alive1a) {
+      this.shuriken1a.visible = true;
+      this.shuriken1a.play();
     } else {
-      this.shuriken1.visible = false;
+      this.shuriken1a.visible = false;
     }
 
-    if (this.proj_alive2) {
-      this.shuriken2.visible = true;
-      this.shuriken2.play();
+    if (this.proj_alive2a) {
+      this.shuriken2a.visible = true;
+      this.shuriken2a.play();
     } else {
-      this.shuriken2.visible = false;
+      this.shuriken2a.visible = false;
+    }
+
+    if (this.proj_alive1b) {
+      this.shuriken1b.visible = true;
+      this.shuriken1b.play();
+    } else {
+      this.shuriken1b.visible = false;
+    }
+
+    if (this.proj_alive2b) {
+      this.shuriken2b.visible = true;
+      this.shuriken2b.play();
+    } else {
+      this.shuriken2b.visible = false;
     }
   };
 
@@ -723,8 +779,10 @@ class Drawer {
       this.eraseAll();
       this.stick1.visible = true;
       this.stick2.visible = true;
-      this.shuriken1.visible = true;
-      this.shuriken2.visible = true;
+      this.shuriken1a.visible = true;
+      this.shuriken2a.visible = true;
+      this.shuriken1b.visible = true;
+      this.shuriken2b.visible = true;
       this.healthContainer1.visible = true;
       this.healthContainer2.visible = true;
       this.time.visible = true;
@@ -790,8 +848,10 @@ class Drawer {
   eraseAll = () => {
     this.stick1.visible = false;
     this.stick2.visible = false;
-    this.shuriken1.visible = false;
-    this.shuriken2.visible = false;
+    this.shuriken1a.visible = false;
+    this.shuriken2a.visible = false;
+    this.shuriken1b.visible = false;
+    this.shuriken2b.visible = false;
     this.healthContainer1.visible = false;
     this.healthContainer2.visible = false;
     this.time.visible = false;

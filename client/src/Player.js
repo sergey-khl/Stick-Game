@@ -73,12 +73,32 @@ class Player {
           this.frame_count = 0;
           this.setKnockback('', false);
         }
+      } else if (this.knockback == 'punch_b') {
+        if (this.frame_count == 1) {
+          this.velocity[0] = 0;
+        } else if (this.frame_count <= 11) {
+          this.velocity[0] = this.left ? 5 : -5;
+        } else {
+          this.velocity[0] = 0;
+          this.frame_count = 0;
+          this.setKnockback('', false);
+        }
       } else if (this.knockback == 'kick') {
         if (this.frame_count == 1) {
           this.velocity[0] = 0;
           this.animation = 'stun_stand';
         } else if (this.frame_count <= 24) {
           this.velocity[0] = this.left ? 15 : -15;
+        } else {
+          this.velocity[0] = 0;
+          this.frame_count = 0;
+          this.setKnockback('', false);
+        }
+      } else if (this.knockback == 'kick_b') {
+        if (this.frame_count == 1) {
+          this.velocity[0] = 0;
+        } else if (this.frame_count <= 12) {
+          this.velocity[0] = this.left ? 7 : -7;
         } else {
           this.velocity[0] = 0;
           this.frame_count = 0;
@@ -95,8 +115,27 @@ class Player {
           this.frame_count = 0;
           this.setKnockback('', false);
         }
+      } else if (this.knockback == 'throw_shurikens_b') {
+        if (this.frame_count == 1) {
+          this.velocity[0] = 0;
+        } else if (this.frame_count <= 6) {
+          this.velocity[0] = this.left ? 2 : -2;
+        } else {
+          this.velocity[0] = 0;
+          this.frame_count = 0;
+          this.setKnockback('', false);
+        }
       } else if (this.knockback == 'sweep') {
         if (this.frame_count == 1) {
+          this.velocity[0] = 0;
+          this.animation = 'stun_fall';
+        } else if (this.frame_count >= 61) {
+          this.frame_count = 0;
+          this.setKnockback('', false);
+        }
+      } else if (this.knockback == 'sweep_b') {
+        if (this.frame_count == 1) {
+          this.blocking = false;
           this.velocity[0] = 0;
           this.animation = 'stun_fall';
         } else if (this.frame_count >= 61) {
@@ -291,8 +330,14 @@ class Player {
   }
 
   removeAttackCollision = (attack) => {
-    const index = this.attackCollisionPos.indexOf(attack);
-    this.attackCollisionPos.splice(index, 1);
+    if (typeof attack == String) {
+      const index = this.attackCollisionPos.indexOf(attack);
+      if (index != -1) {
+        this.attackCollisionPos.splice(index, 1);
+      }
+    } else {
+      this.attackCollisionPos.splice(attack, 1);
+    }
   }
 
   getAttackCollision = () => {
@@ -349,7 +394,11 @@ class Player {
     if (is_new) {
       this.frame_count = 0;
     }
-    this.knockback = knock_attack;
+    if (this.blocking) {
+      this.knockback = knock_attack + "_b";
+    } else {
+      this.knockback = knock_attack;
+    }
   }
 
   setLeft = (left) => {

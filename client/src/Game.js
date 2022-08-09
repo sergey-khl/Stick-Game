@@ -194,6 +194,10 @@ class Game {
     for (let i = 0; i < attackCollisionPos1.length; i++) {
       // check if first player is dealing damage
       if (attackCollisionPos1[i]) {
+        if (attackCollisionPos1[i][0] <= 0 || attackCollisionPos1[i][0] >= 2000) {
+          this.player1.removeAttackCollision(i);
+          continue;
+        }
         const damage = this.player2.isBlocking() ? attackCollisionPos1[i][4] / 2 : attackCollisionPos1[i][4];
         if (
           attackCollisionPos1[i][0] + attackCollisionPos1[i][2] >= player2Pos[0] - player2Pos[4] / 3  &&
@@ -202,8 +206,8 @@ class Game {
           attackCollisionPos1[i][1] + attackCollisionPos1[i][3] >= player2Pos[1] - player2Pos[5]
         ) {
           this.player2.setHealth(this.player2.getHealth() - damage);
-          this.player2.setKnockback(attackCollisionPos1[i][5], true);
-          this.player1.removeAttackCollision(attackCollisionPos1[i][5]);
+          this.player2.setKnockback(attackCollisionPos1[i][5], true, this.player2.isBlocking());
+          this.player1.removeAttackCollision(i);
           this.socket1.emit("damage", [2, this.player2.getHealth()]);
           this.socket2.emit("damage", [2, this.player2.getHealth()]);
         } else if (
@@ -213,8 +217,8 @@ class Game {
           attackCollisionPos1[i][1] + attackCollisionPos1[i][3] >= player2Pos[1] - player2Pos[5]
         ) {
           this.player2.setHealth(this.player2.getHealth() - damage);
-          this.player2.setKnockback(attackCollisionPos1[i][5], true);
-          this.player1.removeAttackCollision(attackCollisionPos1[i][5]);
+          this.player2.setKnockback(attackCollisionPos1[i][5], true, this.player2.isBlocking());
+          this.player1.removeAttackCollision(i);
           this.socket1.emit("damage", [2, this.player2.getHealth()]);
           this.socket2.emit("damage", [2, this.player2.getHealth()]);
         }
@@ -224,7 +228,10 @@ class Game {
     for (let i = 0; i < attackCollisionPos2.length; i++) {
       // check if second player is dealing damage
       if (attackCollisionPos2[i]) {
-        const knockback = this.player1.isBlocking() ? 2 : 5;
+        if (attackCollisionPos2[i][0] <= 0 || attackCollisionPos2[i][0] >= 2000) {
+          this.player2.removeAttackCollision(i);
+          continue;
+        }
         const damage = this.player1.isBlocking() ? attackCollisionPos2[i][4] / 2 : attackCollisionPos2[i][4];
         if (
           attackCollisionPos2[i][0] + attackCollisionPos2[i][2] >= player1Pos[0] - player1Pos[4] / 3 &&
@@ -233,8 +240,8 @@ class Game {
           attackCollisionPos2[i][1] + attackCollisionPos2[i][3] >= player1Pos[1] - player1Pos[5]
         ) {
           this.player1.setHealth(this.player1.getHealth() - damage);
-          this.player1.setKnockback(attackCollisionPos2[i][5], true);
-          this.player2.removeAttackCollision(attackCollisionPos2[i][5]);
+          this.player1.setKnockback(attackCollisionPos2[i][5], true, this.player1.isBlocking());
+          this.player2.removeAttackCollision(i);
           this.socket1.emit("damage", [1, this.player1.getHealth()]);
           this.socket2.emit("damage", [1, this.player1.getHealth()]);
         } else if (
@@ -244,8 +251,8 @@ class Game {
           attackCollisionPos2[i][1] + attackCollisionPos2[i][3] >= player1Pos[1] - player1Pos[5]
         ) {
           this.player1.setHealth(this.player1.getHealth() - damage);
-          this.player1.setKnockback(attackCollisionPos2[i][5], true);
-          this.player2.removeAttackCollision(attackCollisionPos2[i][5]);
+          this.player1.setKnockback(attackCollisionPos2[i][5], true, this.player1.isBlocking());
+          this.player2.removeAttackCollision(i);
           this.socket1.emit("damage", [1, this.player1.getHealth()]);
           this.socket2.emit("damage", [1, this.player1.getHealth()]);
         }
