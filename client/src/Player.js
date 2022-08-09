@@ -60,6 +60,7 @@ class Player {
     
 
     if (this.knockback != '') { // we are being knocked back
+      this.attacking = false;
       this.frame_count += 1;
       if (this.knockback == 'punch') {
         if (this.frame_count == 1) {

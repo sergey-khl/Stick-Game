@@ -89,15 +89,20 @@ class Game {
   }
 
   draw = () => {
-    if (this.player1.getHealth() == 0 && this.player2.getHealth() == 0) {
-      this.socket1.emit('game-over', false);
-      this.socket2.emit('game-over', false);
-    } else if (this.player1.getHealth() <= 0) {
-      this.socket1.emit('game-over', false);
-      this.socket2.emit('game-over', true);
-    } else if (this.player2.getHealth() <= 0) {
-      this.socket1.emit('game-over', true);
-      this.socket2.emit('game-over', false);
+    if (this.isGood) {
+      if (this.player1.getHealth() == 0 && this.player2.getHealth() == 0) {
+        this.isGood = false;
+        this.socket1.emit('game-over', false);
+        this.socket2.emit('game-over', false);
+      } else if (this.player1.getHealth() <= 0) {
+        this.isGood = false;
+        this.socket1.emit('game-over', false);
+        this.socket2.emit('game-over', true);
+        this.isGood = false;
+      } else if (this.player2.getHealth() <= 0) {
+        this.socket1.emit('game-over', true);
+        this.socket2.emit('game-over', false);
+      }
     }
     this.socket1.emit("render");
     this.socket2.emit("render");
@@ -250,7 +255,8 @@ class Game {
 
   getGood = () => {
     if (this.socket1 && this.socket2) {
-      return this.socket1.connected && this.socket2.connected;
+      this.isGood = this.socket1.connected && this.socket2.connected;
+      return this.isGood;
     } else {
       return false;
     }
