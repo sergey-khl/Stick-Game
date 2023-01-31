@@ -14,7 +14,7 @@ app.get('/', (req, res) => {
     });
 });
 app.use(express.static(path.join(__dirname, '/../client')));
-const PORT = process.env.NODE_ENV == 'production' ? 80 : 8080;
+const PORT = process.env.NODE_ENV == 'production' ? 80 : 3000;
 const FPS = 60;
 
 const server = createServer(app);
