@@ -24,7 +24,7 @@ let io = new Server(server);
 let players = [];
 let games = [];
 
-for (let i = 0; i < 2; i++) {
+for (let i = 0; i < 100; i++) {
     games.push([new Game(), false]);
 } 
 
